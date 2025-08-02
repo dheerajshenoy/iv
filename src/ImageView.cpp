@@ -107,20 +107,34 @@ ImageView::openFile(const QString &filepath) noexcept
 QImage
 ImageView::magickImageToQImage(Magick::Image &image) noexcept
 {
-    int width  = image.columns();
-    int height = image.rows();
+    const int width  = image.columns();
+    const int height = image.rows();
 
     const bool hasAlpha            = image.alpha();
     const std::string format       = hasAlpha ? "RGBA" : "RGB";
     const QImage::Format imgFormat = hasAlpha ? QImage::Format_RGBA8888 : QImage::Format_RGB888;
 
     const int bytesPerPixel = hasAlpha ? 4 : 3;
+    const int bytesPerLine  = width * bytesPerPixel; // tightly packed
+
     std::vector<unsigned char> buffer(width * height * bytesPerPixel);
 
-    QImage img(width, height, imgFormat);
-    image.write(0, 0, width, height, format, Magick::CharPixel, img.bits());
+    Magick::Blob blob;
+    try
+    {
+        image.write(&blob, format);
+    }
+    catch (...)
+    {
+        return QImage();
+    }
 
-    return img;
+    const uchar *data = static_cast<const uchar *>(blob.data());
+
+    QImage img(data, width, height, bytesPerLine, imgFormat);
+    // image.write(0, 0, width, height, format, Magick::CharPixel, img.bits());
+
+    return img.copy();
 }
 
 #ifdef HAS_LIBAVIF
