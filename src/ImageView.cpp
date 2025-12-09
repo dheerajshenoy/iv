@@ -340,13 +340,13 @@ ImageView::scrollRight() noexcept
 void
 ImageView::scrollUp() noexcept
 {
-    m_vscrollbar->setValue(m_vscrollbar->value() + 30);
+    m_vscrollbar->setValue(m_vscrollbar->value() - 30);
 }
 
 void
 ImageView::scrollDown() noexcept
 {
-    m_vscrollbar->setValue(m_vscrollbar->value() - 30);
+    m_vscrollbar->setValue(m_vscrollbar->value() + 30);
 }
 
 void

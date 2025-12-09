@@ -61,7 +61,10 @@ public:
         updateMinimapRegion();
     }
 
-    inline bool success() noexcept { return m_success; }
+    inline bool success() noexcept
+    {
+        return m_success;
+    }
 
     void updateMinimapPosition() noexcept;
 signals:

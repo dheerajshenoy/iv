@@ -1,7 +1,7 @@
 #pragma once
 
-#include <QString>
 #include <QMap>
+#include <QString>
 
 struct Config
 {
@@ -23,5 +23,6 @@ struct Config
     bool tabs_shown;
     bool tabs_autohide;
 
+    // Shortcuts
     QMap<QString, QString> shortcutMap;
 };

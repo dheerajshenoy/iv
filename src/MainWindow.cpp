@@ -310,7 +310,7 @@ void
 MainWindow::initConfig() noexcept
 {
 
-    QString config_file = CONFIG_DIR + QDir::separator() + "config.toml";
+    const QString config_file = CONFIG_DIR + QDir::separator() + "config.toml";
 
     toml::table toml;
 
@@ -326,43 +326,59 @@ MainWindow::initConfig() noexcept
 
     // Read tab options
     auto tabs              = toml["tabs"];
-    m_config.tabs_shown    = tabs["shown"].value_or(true);
-    m_config.tabs_autohide = tabs["auto_hide"].value_or(true);
 
-    m_tab_widget->setVisible(m_config.tabs_shown);
-    m_tab_widget->setTabBarAutoHide(m_config.tabs_autohide);
+    if (tabs) {
+        m_config.tabs_shown    = tabs["shown"].value_or(true);
+        m_config.tabs_autohide = tabs["auto_hide"].value_or(true);
+        m_tab_widget->setVisible(m_config.tabs_shown);
+        m_tab_widget->setTabBarAutoHide(m_config.tabs_autohide);
+    }
+
 
     // Read scrollbars options
     auto hscrollbar               = toml["hscrollbar"];
-    m_config.hscrollbar_shown     = hscrollbar["shown"].value_or(true);
-    m_config.hscrollbar_auto_hide = hscrollbar["auto_hide"].value_or(true);
+
+    if (hscrollbar) {
+        m_config.hscrollbar_shown     = hscrollbar["shown"].value_or(true);
+        m_config.hscrollbar_auto_hide = hscrollbar["auto_hide"].value_or(true);
+    }
 
     auto vscrollbar               = toml["vscrollbar"];
-    m_config.vscrollbar_shown     = vscrollbar["shown"].value_or(true);
-    m_config.vscrollbar_auto_hide = vscrollbar["auto_hide"].value_or(true);
+
+    if (vscrollbar) {
+        m_config.vscrollbar_shown     = vscrollbar["shown"].value_or(true);
+        m_config.vscrollbar_auto_hide = vscrollbar["auto_hide"].value_or(true);
+    }
 
     // Read minimap options
     auto minimap = toml["minimap"];
 
-    m_config.minimap_shown     = minimap["shown"].value_or(false);
-    m_config.auto_hide_minimap = minimap["auto_hide"].value_or(true);
+    if (minimap) {
+        m_config.minimap_shown     = minimap["shown"].value_or(false);
+        m_config.auto_hide_minimap = minimap["auto_hide"].value_or(true);
+    }
 
     auto overlay = minimap["overlay"];
 
-    m_config.minimap_overlay_color        = overlay["color"].value_or("#55FF0000");
-    m_config.minimap_overlay_border_color = overlay["border"].value_or("#5500FF00");
-    m_config.minimap_overlay_border_width = overlay["border_width"].value<int>().value();
+    if (overlay) {
+        m_config.minimap_overlay_color        = overlay["color"].value_or("#55FF0000");
+        m_config.minimap_overlay_border_color = overlay["border"].value_or("#5500FF00");
+        m_config.minimap_overlay_border_width = overlay["border_width"].value<int>().value();
+    }
 
     // Read Keybindings
 
     auto keys = toml["keybindings"];
 
-    for (auto &[action, value] : *keys.as_table())
+    if (keys) {
+        for (auto &[action, value] : *keys.as_table())
     {
         if (value.is_value())
             setupKeybinding(QString::fromStdString(std::string(action.str())),
-                            QString::fromStdString(value.value_or<std::string>("")));
+                QString::fromStdString(value.value_or<std::string>("")));
     }
+    }
+
 }
 
 void

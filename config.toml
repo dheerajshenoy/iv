@@ -1,0 +1,15 @@
+[tabs]
+shown = false
+auto_hide = true
+
+[hscrollbar]
+shown = true
+auto_hide = true
+
+[vscrollbar]
+shown = true
+auto_hide = true
+
+[minimap]
+shown = true
+auto_hide = true
