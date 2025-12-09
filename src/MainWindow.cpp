@@ -384,6 +384,15 @@ MainWindow::initConfig() noexcept
 void
 MainWindow::initCommandMap() noexcept
 {
+
+    m_commandMap["reload_file"] = [this]()
+    {
+        if (m_imgv)
+        {
+            QString filepath = m_imgv->filePath();
+            m_imgv->reloadFile();
+        }
+    };
     m_commandMap["open_file"] = [this]()
     {
         OpenFile();

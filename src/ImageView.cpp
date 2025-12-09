@@ -573,3 +573,12 @@ ImageView::setDPR(float dpr) noexcept
     render();
 #endif
 }
+
+void ImageView::reloadFile() noexcept
+{
+    if (m_filepath.isEmpty())
+        return;
+
+    openFile(m_filepath);
+
+}

@@ -39,6 +39,7 @@ public:
     void scrollDown() noexcept;
     void flipLeftRight() noexcept;
     void flipUpDown() noexcept;
+    void reloadFile() noexcept;
 
     QString fileName() noexcept;
     QString baseName() noexcept;
