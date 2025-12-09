@@ -49,6 +49,8 @@ MainWindow::construct() noexcept
     initConnections();
     show();
 
+    m_tab_widget->setVisible(m_config.ui.tabs_shown);
+    m_tab_widget->setTabBarAutoHide(m_config.ui.tabs_autohide);
     this->setContentsMargins(0, 0, 0, 0);
     layout->setContentsMargins(0, 0, 0, 0);
     widget->setContentsMargins(0, 0, 0, 0);
@@ -100,15 +102,15 @@ MainWindow::initConnections() noexcept
 
     connect(win, &QWindow::screenChanged, this, [&](QScreen *screen)
     {
-        if (std::holds_alternative<QMap<QString, float>>(m_config.dpr))
+        if (std::holds_alternative<QMap<QString, float>>(m_config.rendering.dpr))
         {
             m_dpr = m_screen_dpr_map.value(screen->name(), 1.0f);
             if (m_imgv)
                 m_imgv->setDPR(m_dpr);
         }
-        else if (std::holds_alternative<float>(m_config.dpr))
+        else if (std::holds_alternative<float>(m_config.rendering.dpr))
         {
-            m_dpr = std::get<float>(m_config.dpr);
+            m_dpr = std::get<float>(m_config.rendering.dpr);
         }
     });
 
@@ -321,7 +323,6 @@ MainWindow::initConfig() noexcept
 {
 
     const QString config_file = CONFIG_DIR + QDir::separator() + "config.toml";
-
     toml::table toml;
 
     try
@@ -335,59 +336,32 @@ MainWindow::initConfig() noexcept
     }
 
     // Read tab options
-    auto tabs = toml["tabs"];
+    auto ui = toml["ui"];
 
-    if (tabs)
+    if (ui)
     {
-        m_config.tabs_shown    = tabs["shown"].value_or(true);
-        m_config.tabs_autohide = tabs["auto_hide"].value_or(true);
-        m_tab_widget->setVisible(m_config.tabs_shown);
-        m_tab_widget->setTabBarAutoHide(m_config.tabs_autohide);
-    }
+        m_config.ui.tabs_shown    = ui["shown"].value_or(true);
+        m_config.ui.tabs_autohide = ui["auto_hide"].value_or(true);
 
-    // Read scrollbars options
-    auto hscrollbar = toml["hscrollbar"];
-
-    if (hscrollbar)
-    {
-        m_config.hscrollbar_shown     = hscrollbar["shown"].value_or(true);
-        m_config.hscrollbar_auto_hide = hscrollbar["auto_hide"].value_or(true);
-    }
-
-    auto vscrollbar = toml["vscrollbar"];
-
-    if (vscrollbar)
-    {
-        m_config.vscrollbar_shown     = vscrollbar["shown"].value_or(true);
-        m_config.vscrollbar_auto_hide = vscrollbar["auto_hide"].value_or(true);
-    }
-
-    // Read minimap options
-    auto minimap = toml["minimap"];
-
-    if (minimap)
-    {
-        m_config.minimap_shown     = minimap["shown"].value_or(false);
-        m_config.auto_hide_minimap = minimap["auto_hide"].value_or(true);
-    }
-
-    auto overlay = minimap["overlay"];
-
-    if (overlay)
-    {
-        m_config.minimap_overlay_color        = overlay["color"].value_or("#55FF0000");
-        m_config.minimap_overlay_border_color = overlay["border"].value_or("#5500FF00");
-        m_config.minimap_overlay_border_width = overlay["border_width"].value<int>().value();
+        m_config.ui.hscrollbar_shown     = ui["shown"].value_or(true);
+        m_config.ui.hscrollbar_auto_hide = ui["auto_hide"].value_or(true);
+        m_config.ui.vscrollbar_shown     = ui["shown"].value_or(true);
+        m_config.ui.vscrollbar_auto_hide = ui["auto_hide"].value_or(true);
+        m_config.ui.minimap_shown     = ui["shown"].value_or(false);
+        m_config.ui.auto_hide_minimap = ui["auto_hide"].value_or(true);
+        m_config.ui.minimap_overlay_color        = ui["color"].value_or("#55FF0000");
+        m_config.ui.minimap_overlay_border_color = ui["border"].value_or("#5500FF00");
+        m_config.ui.minimap_overlay_border_width = ui["border_width"].value_or(0);
     }
 
     auto rendering = toml["rendering"];
 
     // If DPR is specified in config, use that (can be scalar or map)
-    if (rendering["dpr"])
+    if (rendering && rendering["dpr"])
     {
         if (rendering["dpr"].is_value())
         {
-            m_config.dpr = rendering["dpr"].value_or(1.0f); // scalar
+            m_config.rendering.dpr = rendering["dpr"].value_or(1.0f); // scalar
         }
         else if (rendering["dpr"].is_table())
         {
@@ -407,12 +381,12 @@ MainWindow::initConfig() noexcept
                 }
             }
 
-            m_config.dpr = m_screen_dpr_map;
+            m_config.rendering.dpr = m_screen_dpr_map;
         }
     }
     else
     {
-        m_config.dpr = m_screen_dpr_map.value(QApplication::primaryScreen()->name(), 1.0f);
+        m_config.rendering.dpr = m_screen_dpr_map.value(QApplication::primaryScreen()->name(), 1.0f);
     }
 
     // Read Keybindings

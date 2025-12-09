@@ -28,30 +28,30 @@ ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m
     m_gscene->addItem(m_pix_item);
 
     m_minimap = new Minimap(m_gview);
-    m_minimap->setOverlayRectColor(QColor::fromString(m_config.minimap_overlay_color));
-    m_minimap->setOverlayRectBorderWidth(m_config.minimap_overlay_border_width);
-    m_minimap->setOverlayRectBorderColor(QColor::fromString(m_config.minimap_overlay_border_color));
+    m_minimap->setOverlayRectColor(QColor::fromString(m_config.ui.minimap_overlay_color));
+    m_minimap->setOverlayRectBorderWidth(m_config.ui.minimap_overlay_border_width);
+    m_minimap->setOverlayRectBorderColor(QColor::fromString(m_config.ui.minimap_overlay_border_color));
     m_minimap->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     m_minimap->raise();
-    m_minimap->setForceHidden(!m_config.minimap_shown);
+    m_minimap->setForceHidden(!m_config.ui.minimap_shown);
 
     setLayout(layout);
     m_hscrollbar = m_gview->horizontalScrollBar();
     m_vscrollbar = m_gview->verticalScrollBar();
 
-    if (!m_config.vscrollbar_auto_hide)
+    if (!m_config.ui.vscrollbar_auto_hide)
         m_gview->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 
-    if (!m_config.vscrollbar_shown)
+    if (!m_config.ui.vscrollbar_shown)
         m_gview->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    if (!m_config.hscrollbar_auto_hide)
+    if (!m_config.ui.hscrollbar_auto_hide)
         m_gview->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 
-    if (!m_config.hscrollbar_shown)
+    if (!m_config.ui.hscrollbar_shown)
         m_gview->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    if (m_config.minimap_shown)
+    if (m_config.ui.minimap_shown)
     {
         connect(m_hscrollbar, &QScrollBar::valueChanged, this, [&](int /*value */) { updateMinimapRegion(); });
         connect(m_vscrollbar, &QScrollBar::valueChanged, this, [&](int /*value */) { updateMinimapRegion(); });
