@@ -37,7 +37,7 @@
 git clone github.com/dheerajshenoy/iv
 cd iv
 mkdir build && cd build
-cmake .. -G Ninja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug
+cmake .. -G Ninja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release
 ninja
 sudo ninja install
 ```
