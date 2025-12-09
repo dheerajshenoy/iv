@@ -89,18 +89,28 @@ MainWindow::initDefaultKeybinds() noexcept
 void
 MainWindow::initConnections() noexcept
 {
-    m_dpr        = m_tab_widget->window()->devicePixelRatioF();
+
+    QList<QScreen *> outputs = QGuiApplication::screens();
+    // connect(m_tab_widget, &QTabWidget::currentChanged, this,
+    //         &MainWindow::handleCurrentTabChanged);
+
     QWindow *win = window()->windowHandle();
-    if (win)
+
+    m_dpr = m_screen_dpr_map.value(QGuiApplication::primaryScreen()->name(), 1.0f);
+
+    connect(win, &QWindow::screenChanged, this, [&](QScreen *screen)
     {
-        connect(win, &QWindow::screenChanged, this, [&](QScreen *screen)
+        if (std::holds_alternative<QMap<QString, float>>(m_config.dpr))
         {
-            Q_UNUSED(screen);
-            m_dpr = this->devicePixelRatioF();
+            m_dpr = m_screen_dpr_map.value(screen->name(), 1.0f);
             if (m_imgv)
                 m_imgv->setDPR(m_dpr);
-        });
-    }
+        }
+        else if (std::holds_alternative<float>(m_config.dpr))
+        {
+            m_dpr = std::get<float>(m_config.dpr);
+        }
+    });
 
     connect(m_tab_widget, &TabWidget::currentChanged, [&](int index)
     {
@@ -157,7 +167,7 @@ MainWindow::OpenFile(const QString &filepath) noexcept
     if (fp.startsWith("~"))
         fp = fp.replace(0, 1, QString::fromLocal8Bit(getenv("HOME")));
 
-    m_imgv = new ImageView(m_config, m_tab_widget);
+    m_imgv       = new ImageView(m_config, m_tab_widget);
     bool success = m_imgv->openFile(filepath);
     if (!success)
         return;
@@ -325,27 +335,29 @@ MainWindow::initConfig() noexcept
     }
 
     // Read tab options
-    auto tabs              = toml["tabs"];
+    auto tabs = toml["tabs"];
 
-    if (tabs) {
+    if (tabs)
+    {
         m_config.tabs_shown    = tabs["shown"].value_or(true);
         m_config.tabs_autohide = tabs["auto_hide"].value_or(true);
         m_tab_widget->setVisible(m_config.tabs_shown);
         m_tab_widget->setTabBarAutoHide(m_config.tabs_autohide);
     }
 
-
     // Read scrollbars options
-    auto hscrollbar               = toml["hscrollbar"];
+    auto hscrollbar = toml["hscrollbar"];
 
-    if (hscrollbar) {
+    if (hscrollbar)
+    {
         m_config.hscrollbar_shown     = hscrollbar["shown"].value_or(true);
         m_config.hscrollbar_auto_hide = hscrollbar["auto_hide"].value_or(true);
     }
 
-    auto vscrollbar               = toml["vscrollbar"];
+    auto vscrollbar = toml["vscrollbar"];
 
-    if (vscrollbar) {
+    if (vscrollbar)
+    {
         m_config.vscrollbar_shown     = vscrollbar["shown"].value_or(true);
         m_config.vscrollbar_auto_hide = vscrollbar["auto_hide"].value_or(true);
     }
@@ -353,32 +365,69 @@ MainWindow::initConfig() noexcept
     // Read minimap options
     auto minimap = toml["minimap"];
 
-    if (minimap) {
+    if (minimap)
+    {
         m_config.minimap_shown     = minimap["shown"].value_or(false);
         m_config.auto_hide_minimap = minimap["auto_hide"].value_or(true);
     }
 
     auto overlay = minimap["overlay"];
 
-    if (overlay) {
+    if (overlay)
+    {
         m_config.minimap_overlay_color        = overlay["color"].value_or("#55FF0000");
         m_config.minimap_overlay_border_color = overlay["border"].value_or("#5500FF00");
         m_config.minimap_overlay_border_width = overlay["border_width"].value<int>().value();
+    }
+
+    auto rendering = toml["rendering"];
+
+    // If DPR is specified in config, use that (can be scalar or map)
+    if (rendering["dpr"])
+    {
+        if (rendering["dpr"].is_value())
+        {
+            m_config.dpr = rendering["dpr"].value_or(1.0f); // scalar
+        }
+        else if (rendering["dpr"].is_table())
+        {
+            auto dpr_table = rendering["dpr"];
+            for (auto &[screen_name, value] : *dpr_table.as_table())
+            {
+                float dpr_value          = value.value_or(1.0f);
+                QString screen_str       = QString::fromStdString(std::string(screen_name.str()));
+                QList<QScreen *> screens = QApplication::screens();
+                for (QScreen *screen : screens)
+                {
+                    if (screen->name() == screen_str)
+                    {
+                        m_screen_dpr_map[screen->name()] = dpr_value;
+                        break;
+                    }
+                }
+            }
+
+            m_config.dpr = m_screen_dpr_map;
+        }
+    }
+    else
+    {
+        m_config.dpr = m_screen_dpr_map.value(QApplication::primaryScreen()->name(), 1.0f);
     }
 
     // Read Keybindings
 
     auto keys = toml["keybindings"];
 
-    if (keys) {
-        for (auto &[action, value] : *keys.as_table())
+    if (keys)
     {
-        if (value.is_value())
-            setupKeybinding(QString::fromStdString(std::string(action.str())),
-                QString::fromStdString(value.value_or<std::string>("")));
+        for (auto &[action, value] : *keys.as_table())
+        {
+            if (value.is_value())
+                setupKeybinding(QString::fromStdString(std::string(action.str())),
+                                QString::fromStdString(value.value_or<std::string>("")));
+        }
     }
-    }
-
 }
 
 void

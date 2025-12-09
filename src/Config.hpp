@@ -23,6 +23,9 @@ struct Config
     bool tabs_shown;
     bool tabs_autohide;
 
+    // Screen dpr scalar or map
+    std::variant<float, QMap<QString, float>> dpr{};
+
     // Shortcuts
     QMap<QString, QString> shortcutMap;
 };

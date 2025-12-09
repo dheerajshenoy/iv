@@ -1,18 +1,18 @@
 #pragma once
 
-#include "Panel.hpp"
-#include "argparse.hpp"
-#include "TabWidget.hpp"
 #include "Config.hpp"
+#include "Panel.hpp"
+#include "TabWidget.hpp"
+#include "argparse.hpp"
 
-#include <QMimeData>
-#include <qevent.h>
 #include <QApplication>
 #include <QMainWindow>
+#include <QMimeData>
+#include <QStandardPaths>
 #include <QTabWidget>
 #include <QVBoxLayout>
 #include <QWidget>
-#include <QStandardPaths>
+#include <qevent.h>
 
 #define __IV_VERSION "0.1.0"
 #define CONFIG_DIR QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + QDir::separator() + "iv"
@@ -71,4 +71,6 @@ private:
     QMap<QString, std::function<void()>> m_commandMap;
     float m_dpr{1.0f};
     Config m_config;
+
+    QMap<QString, float> m_screen_dpr_map; // DPR per screen
 };
