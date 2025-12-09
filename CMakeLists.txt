@@ -44,7 +44,7 @@ add_executable(${PROJECT_NAME}
 include_directories(${MAGICKPP_INCLUDE_DIRS})
 link_directories(${MAGICKPP_LIBRARY_DIRS})
 include_directories(${ImageMagick_INCLUDE_DIRS})
-# qt_add_resources(RESOURCES resources.qrc)
+qt_add_resources(RESOURCES resources.qrc)
 
 target_sources(${PROJECT_NAME} PRIVATE ${RESOURCES})
 

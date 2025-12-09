@@ -1,6 +1,8 @@
+<!-- -*- mode: nxml; -*- -->
 <RCC>
     <qresource prefix="/">
-        <file>resources/icons/dodo.svg</file>
+        <file>resources/iv.svg</file>
+        <file>resources/fonts/victor.ttf</file>
     </qresource>
 </RCC>
 
