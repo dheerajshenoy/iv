@@ -1,5 +1,5 @@
 [tabs]
-shown = false
+shown = true
 auto_hide = true
 
 [hscrollbar]
@@ -13,3 +13,25 @@ auto_hide = true
 [minimap]
 shown = true
 auto_hide = true
+
+[keybindings]
+open_file = "O"
+close_file = "Ctrl+W"
+toggle_tabs = "Ctrl+T"
+toggle_fullscreen = "F11"
+open_file_location = "Ctrl+L"
+zoom_in = "="
+zoom_out = "-"
+rotate_clock = ">"
+rotate_anticlock = "<"
+fit_width = "Ctrl+Shift+W"
+fit_height = "Ctrl+Shift+H"
+scroll_left = "H"
+scroll_right = "L"
+scroll_up = "K"
+scroll_down = "J"
+toggle_minimap = "M"
+flip_left = "Ctrl+H"
+flip_right = "Ctrl+L"
+flip_up = "Ctrl+K"
+flip_down = "Ctrl+J"
