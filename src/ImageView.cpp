@@ -77,23 +77,7 @@ ImageView::openFile(const QString &filepath) noexcept
 
     m_success = false;
 
-    if (m_mimeType == "image/avif")
-#ifdef HAS_LIBAVIF
-        success = renderAvif();
-#else
-    {
-        QMessageBox::warning(this, "Open File",
-                             "You have tried to open an AVIF file. IV currently does not open AVIF. Please install "
-                             "`libavif` library and then build IV again.");
-        m_success = false;
-        return m_success;
-    }
-#endif
-    else
-    {
-        // Concurrently render to avoid blocking UI
-        QtConcurrent::run([this, filepath]() { m_success = render(); }).waitForFinished();
-    }
+    QtConcurrent::run([this, filepath]() { m_success = render(); }).waitForFinished();
 
     if (!m_success)
     {
@@ -228,6 +212,18 @@ ImageView::renderAvif() noexcept
 bool
 ImageView::render() noexcept
 {
+    if (m_mimeType == "image/avif")
+    {
+#ifdef HAS_LIBAVIF
+        return renderAvif();
+#else
+        QMessageBox::warning(this, "Open File",
+                             "You have tried to open an AVIF file. IV currently does not open AVIF. Please install "
+                             "`libavif` library and then build IV again.");
+        return false;
+#endif
+    }
+
     Magick::Image image;
     try
     {
@@ -574,14 +570,7 @@ ImageView::setDPR(float dpr) noexcept
     if (m_pix_item->pixmap().isNull())
         return;
 
-#ifdef HAS_LIBAVIF
-    if (m_mimeType == "image/avif")
-        renderAvif();
-    else
-        render();
-#else
     render();
-#endif
 }
 
 bool
@@ -598,20 +587,7 @@ ImageView::reloadFile() noexcept
     m_mimeType = getMimeType(m_filepath);
     m_success  = false;
 
-    if (m_mimeType == "image/avif")
-#ifdef HAS_LIBAVIF
-        success = renderAvif();
-#else
-    {
-        QMessageBox::warning(this, "Open File",
-                             "You have tried to open an AVIF file. IV currently does not open AVIF. Please install "
-                             "`libavif` library and then build IV again.");
-        m_success = false;
-        return m_success;
-    }
-#endif
-    else
-        m_success = render();
+    m_success = render();
 
     if (!m_success)
     {
