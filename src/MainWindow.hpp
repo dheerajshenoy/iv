@@ -14,7 +14,7 @@
 #include <QWidget>
 #include <qevent.h>
 
-#define __IV_VERSION "0.1.0"
+#define __IV_VERSION "0.2.0"
 #define CONFIG_DIR QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + QDir::separator() + "iv"
 
 class ImageView;

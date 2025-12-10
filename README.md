@@ -78,3 +78,7 @@ iv <path-to-files>
 
 Iv is configured using `TOML`. The configuration file is expected at `~/.config/iv/config.toml`.
 A sample configuration file is included in this repository.
+
+# CHANGELOG
+
+Check the [CHANGELOG](CHANGELOG.md) for more details on changes and updates.
