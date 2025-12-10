@@ -56,6 +56,11 @@ public:
     void OpenContainingFolder() noexcept;
     void ToggleAutoReload() noexcept;
 
+    inline void ToggleStatusbar() const noexcept
+    {
+        m_panel->setVisible(!m_panel->isVisible());
+    }
+
 protected:
     void dragEnterEvent(QDragEnterEvent *e) override;
     void dropEvent(QDropEvent *e) override;
@@ -69,6 +74,32 @@ private:
     QStringList openFileDialog() noexcept;
     void handleTabClose(int index) noexcept;
     bool m_default_keybindings{true};
+
+    QMenu *m_file_menu{nullptr};
+    QMenu *m_view_menu{nullptr};
+    QMenu *m_edit_menu{nullptr};
+    QMenu *m_help_menu{nullptr};
+
+    QMenu *m_zoom_menu{nullptr};
+    QMenu *m_rotate_menu{nullptr};
+    QMenu *m_fit_menu{nullptr};
+    QMenu *m_flip_menu{nullptr};
+    QMenu *m_toggle_menu{nullptr};
+
+    QAction *m_open_file_action{nullptr};
+    QAction *m_close_file_action{nullptr};
+    QAction *m_exit_action{nullptr};
+    QAction *m_zoom_in_action{nullptr};
+    QAction *m_zoom_out_action{nullptr};
+    QAction *m_rotate_clock_action{nullptr};
+    QAction *m_rotate_anticlock_action{nullptr};
+    QAction *m_fit_width_action{nullptr};
+    QAction *m_fit_height_action{nullptr};
+    QAction *m_open_containing_folder_action{nullptr};
+    QAction *m_toggle_minimap_action{nullptr};
+    QAction *m_toggle_auto_reload_action{nullptr};
+    QAction *m_toggle_panel_action{nullptr};
+
 
     TabWidget *m_tab_widget{new TabWidget()};
     Panel *m_panel{new Panel()};

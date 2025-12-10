@@ -3,9 +3,11 @@
 #include "ImageView.hpp"
 #include "toml.hpp"
 
+#include <QActionGroup>
 #include <QDesktopServices>
 #include <QFileDialog>
 #include <QKeySequence>
+#include <QMenuBar>
 #include <QMessageBox>
 #include <QScreen>
 #include <QShortcut>
@@ -55,6 +57,66 @@ MainWindow::construct() noexcept
     initConfig();
     initConnections();
     show();
+
+    m_file_menu = menuBar()->addMenu("&File");
+    m_view_menu = menuBar()->addMenu("&View");
+    m_edit_menu = menuBar()->addMenu("&Edit");
+    m_help_menu = menuBar()->addMenu("&Help");
+
+    m_open_file_action = m_file_menu->addAction(QString("Open File\t%1").arg(m_config.shortcutMap["open_file"]), this,
+                                                &MainWindow::openFileDialog);
+    m_open_containing_folder_action = m_file_menu->addAction(
+        QString("Open Containing Folder\t%1").arg(m_config.shortcutMap["open_containing_folder"]), this,
+        &MainWindow::OpenContainingFolder);
+
+    m_close_file_action = m_file_menu->addAction(QString("Close File\t%1").arg(m_config.shortcutMap["close_file"]),
+                                                 this, &MainWindow::CloseFile);
+    m_exit_action =
+        m_file_menu->addAction(QString("Exit\t%1").arg(m_config.shortcutMap["exit"]), this, &MainWindow::close);
+
+    m_zoom_menu = m_view_menu->addMenu("Zoom");
+    m_zoom_in_action =
+        m_zoom_menu->addAction(QString("In\t%1").arg(m_config.shortcutMap["zoom_in"]), this, &MainWindow::ZoomIn);
+    m_zoom_out_action =
+        m_zoom_menu->addAction(QString("Out\t%1").arg(m_config.shortcutMap["zoom_out"]), this, &MainWindow::ZoomOut);
+
+    m_rotate_menu         = m_view_menu->addMenu("Rotate");
+    m_rotate_clock_action = m_rotate_menu->addAction(QString("Clockwise\t%1").arg(m_config.shortcutMap["rotate_clock"]),
+                                                     this, &MainWindow::RotateClock);
+    m_rotate_anticlock_action = m_rotate_menu->addAction(
+        QString("Anticlockwise\t%1").arg(m_config.shortcutMap["rotate_anticlock"]), this, &MainWindow::RotateAnticlock);
+
+    m_fit_menu = m_view_menu->addMenu("Fit");
+
+    m_fit_width_action =
+        m_fit_menu->addAction(QString("Width\t%1").arg(m_config.shortcutMap["fit_width"]), this, &MainWindow::FitWidth);
+    m_fit_height_action = m_fit_menu->addAction(QString("Height\t%1").arg(m_config.shortcutMap["fit_height"]), this,
+                                                &MainWindow::FitHeight);
+
+    m_toggle_menu           = m_view_menu->addMenu("Toggle");
+    m_toggle_minimap_action = m_toggle_menu->addAction(
+        QString("Minimap\t%1").arg(m_config.shortcutMap["toggle_minimap"]), this, &MainWindow::ToggleMinimap);
+    m_toggle_minimap_action->setCheckable(true);
+    m_toggle_minimap_action->setChecked(m_config.ui.minimap_shown);
+
+    m_toggle_panel_action = m_toggle_menu->addAction(
+        QString("Statusbar\t%1").arg(m_config.shortcutMap["toggle_statusbar"]), this, &MainWindow::ToggleStatusbar);
+    m_toggle_panel_action->setCheckable(true);
+    m_toggle_panel_action->setChecked(m_config.ui.statusbar_shown);
+
+    m_toggle_auto_reload_action = m_edit_menu->addAction(
+        QString("Auto Reload\t%1").arg(m_config.shortcutMap["auto_reload"]), this, &MainWindow::ToggleAutoReload);
+    m_toggle_auto_reload_action->setCheckable(true);
+    m_toggle_auto_reload_action->setChecked(m_config.behavior.auto_reload);
+
+    m_help_menu->addAction("About", this, [&]()
+    {
+        // TODO: Add custom widget
+        QMessageBox::information(
+            this, "About iv",
+            QString("iv version %1\n\nA simple and fast image viewer built with Qt and ImageMagick.")
+                .arg(__IV_VERSION));
+    });
 
     this->setContentsMargins(0, 0, 0, 0);
     m_tab_widget->setContentsMargins(0, 0, 0, 0);
@@ -181,7 +243,7 @@ MainWindow::OpenFile(const QString &filepath) noexcept
     if (fp.startsWith("~"))
         fp = fp.replace(0, 1, QString::fromLocal8Bit(getenv("HOME")));
 
-    m_imgv       = new ImageView(m_config, m_tab_widget);
+    m_imgv = new ImageView(m_config, m_tab_widget);
 
     bool success = m_imgv->openFile(filepath);
     if (!success)
@@ -364,18 +426,20 @@ MainWindow::initConfig() noexcept
 
     if (ui)
     {
-        m_config.ui.tabs_shown    = ui["shown"].value_or(true);
-        m_config.ui.tabs_autohide = ui["auto_hide"].value_or(true);
+        m_config.ui.tabs_shown    = ui["tabs_shown"].value_or(true);
+        m_config.ui.tabs_autohide = ui["tabs_auto_hide"].value_or(true);
 
-        m_config.ui.hscrollbar_shown             = ui["shown"].value_or(true);
-        m_config.ui.hscrollbar_auto_hide         = ui["auto_hide"].value_or(true);
-        m_config.ui.vscrollbar_shown             = ui["shown"].value_or(true);
-        m_config.ui.vscrollbar_auto_hide         = ui["auto_hide"].value_or(true);
-        m_config.ui.minimap_shown                = ui["shown"].value_or(false);
-        m_config.ui.auto_hide_minimap            = ui["auto_hide"].value_or(true);
-        m_config.ui.minimap_overlay_color        = ui["color"].value_or("#55FF0000");
-        m_config.ui.minimap_overlay_border_color = ui["border"].value_or("#5500FF00");
-        m_config.ui.minimap_overlay_border_width = ui["border_width"].value_or(0);
+        m_config.ui.menubar_shown                = ui["menubar_shown"].value_or(true);
+        m_config.ui.statusbar_shown              = ui["statusbar_shown"].value_or(true);
+        m_config.ui.hscrollbar_shown             = ui["hscrollbar_shown"].value_or(true);
+        m_config.ui.hscrollbar_auto_hide         = ui["hscrollbar_auto_hide"].value_or(true);
+        m_config.ui.vscrollbar_shown             = ui["vscrollbar_shown"].value_or(true);
+        m_config.ui.vscrollbar_auto_hide         = ui["vscrollbar_auto_hide"].value_or(true);
+        m_config.ui.minimap_shown                = ui["minimap_shown"].value_or(false);
+        m_config.ui.auto_hide_minimap            = ui["minimap_auto_hide"].value_or(true);
+        m_config.ui.minimap_overlay_color        = ui["minimap_overlay_color"].value_or("#55FF0000");
+        m_config.ui.minimap_overlay_border_color = ui["minimap_overlay_border"].value_or("#5500FF00");
+        m_config.ui.minimap_overlay_border_width = ui["minimap_overlay_border_width"].value_or(0);
     }
 
     auto behavior = toml["behavior"];
