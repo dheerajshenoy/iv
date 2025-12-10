@@ -11,6 +11,7 @@
 #include <QScrollBar>
 #include <QThreadPool>
 #include <QtConcurrent/QtConcurrent>
+#include <QtConcurrent/qtconcurrentreducekernel.h>
 
 #ifdef HAS_LIBAVIF
 #include <avif/avif.h>
@@ -65,13 +66,9 @@ ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m
 bool
 ImageView::openFile(const QString &filepath) noexcept
 {
-    m_filepath           = filepath;
-    QFuture<void> future = QtConcurrent::run([&]
-    {
-        auto bytes  = QFileInfo(m_filepath).size();
-        QString str = humanReadableSize(bytes);
-        m_filesize  = str;
-    });
+    m_filepath       = filepath;
+    const auto bytes = QFileInfo(m_filepath).size();
+    m_filesize       = humanReadableSize(bytes);
 
     m_isGif = false;
     stopGifAnimation();
@@ -93,7 +90,10 @@ ImageView::openFile(const QString &filepath) noexcept
     }
 #endif
     else
-        m_success = render();
+    {
+        // Concurrently render to avoid blocking UI
+        QtConcurrent::run([this, filepath]() { m_success = render(); }).waitForFinished();
+    }
 
     if (!m_success)
     {
@@ -211,8 +211,7 @@ ImageView::avifToQImage() noexcept
     avifRGBImageFreePixels(&rgb);
     avifDecoderDestroy(decoder);
 
-    img = QImage(pixels.data(), width, height, QImage::Format_RGBA8888).copy();
-    return img;
+    return QImage(pixels.data(), width, height, QImage::Format_RGBA8888).copy();
 }
 
 bool
@@ -361,19 +360,21 @@ ImageView::scrollDown() noexcept
 void
 ImageView::flipLeftRight() noexcept
 {
-    QPixmap pix = m_pix_item->pixmap();
-    pix         = pix.transformed(QTransform().scale(-1, 1));
-    m_pix_item->setPixmap(pix);
-    m_minimap->setPixmap(pix);
+    QPixmap pix  = m_pix_item->pixmap();
+    QTransform t = m_gview->transform();
+    t.scale(-1, 1);
+    m_gview->setTransform(t);
+    m_minimap->setTransform(t);
 }
 
 void
 ImageView::flipUpDown() noexcept
 {
-    QPixmap pix = m_pix_item->pixmap();
-    pix         = pix.transformed(QTransform().scale(1, -1));
-    m_pix_item->setPixmap(pix);
-    m_minimap->setPixmap(pix);
+    QPixmap pix  = m_pix_item->pixmap();
+    QTransform t = m_gview->transform();
+    t.scale(1, -1);
+    m_gview->setTransform(t);
+    m_minimap->setTransform(t);
 }
 
 QString
@@ -427,9 +428,9 @@ ImageView::updateGifFrame(int /*frameNumber*/) noexcept
     QPixmap frame = m_movie->currentPixmap();
     m_pix_item->setPixmap(frame);
     m_minimap->setPixmap(frame);
-    int margin        = 100;
-    QRectF paddedRect = m_pix_item->boundingRect().adjusted(-margin, -margin, margin, margin);
-    m_gscene->setSceneRect(paddedRect);
+    // int margin        = 100;
+    // QRectF paddedRect = m_pix_item->boundingRect().adjusted(-margin, -margin, margin, margin);
+    // m_gscene->setSceneRect(paddedRect);
 }
 
 void
@@ -589,12 +590,8 @@ ImageView::reloadFile() noexcept
     if (m_filepath.isEmpty())
         return false;
 
-    QFuture<void> future = QtConcurrent::run([&]
-    {
-        auto bytes  = QFileInfo(m_filepath).size();
-        QString str = humanReadableSize(bytes);
-        m_filesize  = str;
-    });
+    const auto bytes = QFileInfo(m_filepath).size();
+    m_filesize       = humanReadableSize(bytes);
 
     m_isGif = false;
     stopGifAnimation();
