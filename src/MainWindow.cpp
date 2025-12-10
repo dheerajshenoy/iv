@@ -28,6 +28,7 @@ MainWindow::readArgs(argparse::ArgumentParser &parser) noexcept
 
     // Construct the main window
     this->construct();
+    updateMenuActions(false);
 
     if (parser.is_used("files"))
     {
@@ -65,6 +66,12 @@ MainWindow::construct() noexcept
 
     m_open_file_action = m_file_menu->addAction(QString("Open File\t%1").arg(m_config.shortcutMap["open_file"]), this,
                                                 &MainWindow::openFileDialog);
+
+    m_recent_files_menu = m_file_menu->addMenu("Recent Files");
+    m_recent_file_manager->PopulateRecentFilesMenu(
+        m_recent_files_menu,
+        std::function<void(const QString &)>([this](const QString &filepath) { OpenFile(filepath); }));
+
     m_open_containing_folder_action = m_file_menu->addAction(
         QString("Open Containing Folder\t%1").arg(m_config.shortcutMap["open_containing_folder"]), this,
         &MainWindow::OpenContainingFolder);
@@ -92,6 +99,13 @@ MainWindow::construct() noexcept
         m_fit_menu->addAction(QString("Width\t%1").arg(m_config.shortcutMap["fit_width"]), this, &MainWindow::FitWidth);
     m_fit_height_action = m_fit_menu->addAction(QString("Height\t%1").arg(m_config.shortcutMap["fit_height"]), this,
                                                 &MainWindow::FitHeight);
+    m_fit_window_action = m_fit_menu->addAction(QString("Window\t%1").arg(m_config.shortcutMap["fit_window"]), this,
+                                                &MainWindow::FitWindow);
+
+    m_auto_fit_action = m_fit_menu->addAction(QString("Auto Fit\t%1").arg(m_config.shortcutMap["auto_fit"]), this,
+                                              &MainWindow::ToggleAutoFit);
+    m_auto_fit_action->setCheckable(true);
+    m_auto_fit_action->setChecked(m_config.behavior.auto_fit);
 
     m_toggle_menu           = m_view_menu->addMenu("Toggle");
     m_toggle_minimap_action = m_toggle_menu->addAction(
@@ -167,8 +181,7 @@ MainWindow::initConnections() noexcept
 {
 
     QList<QScreen *> outputs = QGuiApplication::screens();
-    // connect(m_tab_widget, &QTabWidget::currentChanged, this,
-    //         &MainWindow::handleCurrentTabChanged);
+    connect(m_tab_widget, &QTabWidget::currentChanged, this, &MainWindow::handleCurrentTabChanged);
 
     QWindow *win = window()->windowHandle();
 
@@ -245,9 +258,16 @@ MainWindow::OpenFile(const QString &filepath) noexcept
 
     m_imgv = new ImageView(m_config, m_tab_widget);
 
+    connect(m_imgv->gview(), &GraphicsView::zoomInRequested, this, &MainWindow::ZoomIn);
+    connect(m_imgv->gview(), &GraphicsView::zoomOutRequested, this, &MainWindow::ZoomOut);
+
     bool success = m_imgv->openFile(filepath);
     if (!success)
         return;
+
+    updateMenuActions(true);
+
+    m_recent_file_manager->addFilePath(filepath);
 
     if (m_config.behavior.auto_reload)
         m_imgv->setAutoReload(true);
@@ -300,17 +320,32 @@ MainWindow::FitHeight() noexcept
 }
 
 void
-MainWindow::ToggleAutoReload() noexcept
-{
-    if (m_imgv)
-        m_imgv->toggleAutoReload();
-}
-
-void
 MainWindow::FitWidth() noexcept
 {
     if (m_imgv)
         m_imgv->fitWidth();
+}
+
+void
+MainWindow::FitWindow() noexcept
+{
+    if (m_imgv)
+        m_imgv->fitWindow();
+}
+
+void
+MainWindow::ToggleAutoFit() noexcept
+{
+    // Fit when window is resized
+    if (m_imgv)
+        m_imgv->setAutoFit(!m_imgv->autoFit());
+}
+
+void
+MainWindow::ToggleAutoReload() noexcept
+{
+    if (m_imgv)
+        m_imgv->toggleAutoReload();
 }
 
 void
@@ -409,6 +444,7 @@ MainWindow::initConfig() noexcept
 {
 
     const QString config_file = CONFIG_DIR + QDir::separator() + "config.toml";
+
     toml::table toml;
 
     try
@@ -446,7 +482,10 @@ MainWindow::initConfig() noexcept
 
     if (behavior)
     {
-        m_config.behavior.auto_reload = behavior["auto_reload"].value_or(false);
+        m_config.behavior.auto_reload        = behavior["auto_reload"].value_or(false);
+        m_config.behavior.save_recent_files  = behavior["save_recent_files"].value_or(true);
+        m_config.behavior.recent_files_limit = behavior["recent_files_limit"].value_or(10);
+        m_config.behavior.auto_fit           = behavior["auto_fit"].value_or(false);
     }
 
     auto rendering = toml["rendering"];
@@ -496,6 +535,12 @@ MainWindow::initConfig() noexcept
                 setupKeybinding(QString::fromStdString(std::string(action.str())),
                                 QString::fromStdString(value.value_or<std::string>("")));
         }
+    }
+
+    if (m_config.behavior.save_recent_files)
+    {
+        m_recent_file_manager = new RecentFilesManager(CONFIG_DIR + QDir::separator() + "recent_files.json",
+                                                       m_config.behavior.recent_files_limit);
     }
 }
 
@@ -561,9 +606,20 @@ MainWindow::initCommandMap() noexcept
     {
         FitWidth();
     };
+
     m_commandMap["fit_height"] = [this]()
     {
         FitHeight();
+    };
+
+    m_commandMap["fit_window"] = [this]()
+    {
+        FitWindow();
+    };
+
+    m_commandMap["auto_fit"] = [this]()
+    {
+        ToggleAutoFit();
     };
 
     m_commandMap["scroll_left"] = [this]()
@@ -710,4 +766,50 @@ MainWindow::OpenContainingFolder() noexcept
         return;
     QString filedir = m_imgv->fileDir();
     QDesktopServices::openUrl(QUrl(filedir));
+}
+
+void
+MainWindow::updateMenuActions(bool state) noexcept
+{
+    m_zoom_menu->setEnabled(state);
+    m_rotate_menu->setEnabled(state);
+    m_fit_menu->setEnabled(state);
+    m_close_file_action->setEnabled(state);
+    m_toggle_auto_reload_action->setEnabled(state);
+    m_open_containing_folder_action->setEnabled(state);
+}
+
+void
+MainWindow::handleCurrentTabChanged(int index) noexcept
+{
+    m_imgv = qobject_cast<ImageView *>(m_tab_widget->widget(index));
+    updateMenuActions(m_imgv != nullptr);
+    updateFileinfoInPanel();
+}
+
+void
+MainWindow::resizeEvent(QResizeEvent *e)
+{
+    if (m_imgv && m_imgv->autoFit())
+    {
+        switch (m_imgv->fitMode())
+        {
+            case ImageView::FitMode::WIDTH:
+                m_imgv->fitWidth();
+                break;
+
+            case ImageView::FitMode::HEIGHT:
+                m_imgv->fitHeight();
+                break;
+
+            case ImageView::FitMode::WINDOW:
+                m_imgv->fitWindow();
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    QMainWindow::resizeEvent(e);
 }

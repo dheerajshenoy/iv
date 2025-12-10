@@ -2,6 +2,7 @@
 
 #include "Config.hpp"
 #include "Panel.hpp"
+#include "RecentFilesManager.hpp"
 #include "TabWidget.hpp"
 #include "argparse.hpp"
 
@@ -47,6 +48,7 @@ public:
     void RotateAnticlock() noexcept;
     void FitWidth() noexcept;
     void FitHeight() noexcept;
+    void FitWindow() noexcept;
     void Scroll(Direction dir) noexcept;
     void Flip(Direction dir) noexcept;
     void ToggleMinimap() noexcept;
@@ -55,6 +57,7 @@ public:
     void SwitchToTab(int index) noexcept;
     void OpenContainingFolder() noexcept;
     void ToggleAutoReload() noexcept;
+    void ToggleAutoFit() noexcept;
 
     inline void ToggleStatusbar() const noexcept
     {
@@ -64,6 +67,7 @@ public:
 protected:
     void dragEnterEvent(QDragEnterEvent *e) override;
     void dropEvent(QDropEvent *e) override;
+    void resizeEvent(QResizeEvent *e) override;
 
 private:
     void initDefaultKeybinds() noexcept;
@@ -73,12 +77,15 @@ private:
     void updateFileinfoInPanel() noexcept;
     QStringList openFileDialog() noexcept;
     void handleTabClose(int index) noexcept;
+    void updateMenuActions(bool state) noexcept;
+    void handleCurrentTabChanged(int index) noexcept;
     bool m_default_keybindings{true};
 
     QMenu *m_file_menu{nullptr};
     QMenu *m_view_menu{nullptr};
     QMenu *m_edit_menu{nullptr};
     QMenu *m_help_menu{nullptr};
+    QMenu *m_recent_files_menu{nullptr};
 
     QMenu *m_zoom_menu{nullptr};
     QMenu *m_rotate_menu{nullptr};
@@ -95,6 +102,8 @@ private:
     QAction *m_rotate_anticlock_action{nullptr};
     QAction *m_fit_width_action{nullptr};
     QAction *m_fit_height_action{nullptr};
+    QAction *m_fit_window_action{nullptr};
+    QAction *m_auto_fit_action{nullptr};
     QAction *m_open_containing_folder_action{nullptr};
     QAction *m_toggle_minimap_action{nullptr};
     QAction *m_toggle_auto_reload_action{nullptr};
@@ -107,6 +116,6 @@ private:
     QMap<QString, std::function<void()>> m_commandMap;
     float m_dpr{1.0f};
     Config m_config;
-
+    RecentFilesManager *m_recent_file_manager{nullptr};
     QMap<QString, float> m_screen_dpr_map; // DPR per screen
 };
