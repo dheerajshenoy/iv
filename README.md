@@ -1,9 +1,9 @@
 <p align="center"><img src="resources/icons/hicolor/256x256/apps/iv.png"></p>
 <p align="center">Minimal image viewer</p>
 
-# Screenshots
+# Demo
 
-![iv-screenshot](screenshots/iv-screenshot.png)
+![iv-demo](demo.gif)
 
 # Table of Contents
 
