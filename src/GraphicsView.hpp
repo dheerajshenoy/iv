@@ -1,10 +1,12 @@
 #pragma once
 
-#include <QGraphicsView>
-#include <QWheelEvent>
-#include <QMimeData>
-#include <QDropEvent>
 #include <QDragEnterEvent>
+#include <QDropEvent>
+#include <QNativeGestureEvent>
+#include <QGraphicsView>
+#include <QMimeData>
+#include <QWheelEvent>
+#include <qevent.h>
 
 class GraphicsView : public QGraphicsView
 {
@@ -23,10 +25,17 @@ signals:
     void openFilesRequested(const QList<QString> &files);
 
 protected:
+    bool event(QEvent *event) override
+    {
+        if (event->type() == QEvent::NativeGesture)
+            return nativeGestureEvent(static_cast<QNativeGestureEvent *>(event));
+        return QGraphicsView::event(event);
+    }
     void wheelEvent(QWheelEvent *e) override;
     void mousePressEvent(QMouseEvent *e) override;
     void mouseReleaseEvent(QMouseEvent *e) override;
 
 private:
     float m_zoomFactor{1.25f};
+    bool nativeGestureEvent(QNativeGestureEvent *event) noexcept;
 };

@@ -1,6 +1,8 @@
 #include "GraphicsView.hpp"
 
 #include <QCursor>
+#include <qevent.h>
+#include <qnamespace.h>
 
 GraphicsView::GraphicsView(QWidget *parent) : QGraphicsView(parent)
 {
@@ -26,6 +28,7 @@ GraphicsView::wheelEvent(QWheelEvent *event)
             scale(1.0 / m_zoomFactor, 1.0 / m_zoomFactor); // Zoom out
         return;
     }
+
     QGraphicsView::wheelEvent(event);
 }
 
@@ -53,4 +56,21 @@ void
 GraphicsView::zoomOut() noexcept
 {
     scale(1.0 / m_zoomFactor, 1.0 / m_zoomFactor);
+}
+
+bool
+GraphicsView::nativeGestureEvent(QNativeGestureEvent *event) noexcept
+{
+    if (event->fingerCount() == 2)
+    {
+        if (event->gestureType() == Qt::ZoomNativeGesture)
+        {
+            if (event->value() > 0)
+                scale(m_zoomFactor, m_zoomFactor); // Zoom in
+            else
+                scale(1.0 / m_zoomFactor, 1.0 / m_zoomFactor); // Zoom out
+            return true;
+        }
+    }
+    return QGraphicsView::event(event);
 }
