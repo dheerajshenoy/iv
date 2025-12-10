@@ -19,6 +19,8 @@ struct Config
         bool hscrollbar_auto_hide{true};
         bool tabs_shown{true};
         bool tabs_autohide{true};
+        bool statusbar_shown{true};
+        bool menubar_shown{true};
     };
 
     struct Rendering
