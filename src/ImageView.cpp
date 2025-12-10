@@ -110,21 +110,18 @@ ImageView::magickImageToQImage(Magick::Image &image) noexcept
 
     std::vector<unsigned char> buffer(width * height * bytesPerPixel);
 
-    Magick::Blob blob;
     try
     {
-        image.write(&blob, format);
+        image.write(0, 0, width, height, format, Magick::CharPixel, buffer.data());
     }
     catch (...)
     {
         return QImage();
     }
 
-    const uchar *data = static_cast<const uchar *>(blob.data());
+    QImage img(buffer.data(), width, height, bytesPerLine, imgFormat);
 
-    QImage img(data, width, height, bytesPerLine, imgFormat);
-    // image.write(0, 0, width, height, format, Magick::CharPixel, img.bits());
-
+    // Must copy the image data, as the buffer will go out of scope
     return img.copy();
 }
 
