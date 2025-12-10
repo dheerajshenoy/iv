@@ -16,6 +16,7 @@
 #include <QScrollBar>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <QFileSystemWatcher>
 
 class ImageView : public QWidget
 {
@@ -24,6 +25,7 @@ public:
     ImageView(const Config &config, QWidget *parent = nullptr);
 
     bool openFile(const QString &path) noexcept;
+    bool reloadFile() noexcept;
     void setDPR(float dpr) noexcept;
 
     QSize size() noexcept;
@@ -39,7 +41,8 @@ public:
     void scrollDown() noexcept;
     void flipLeftRight() noexcept;
     void flipUpDown() noexcept;
-    void reloadFile() noexcept;
+    void toggleAutoReload() noexcept;
+    void setAutoReload(bool enabled) noexcept;
 
     QString fileName() noexcept;
     QString baseName() noexcept;
@@ -94,7 +97,9 @@ private:
     void updateMinimapRegion() noexcept;
     QString getMimeType(const QString &filepath) noexcept;
 
-    bool m_isGif{false}, m_isMinimapMode{false}, m_success{false};
+    bool waitUntilReadable(const QString &file, int timeoutMs = 1000) noexcept;
+
+    bool m_isGif{false}, m_isMinimapMode{false}, m_success{false}, m_auto_reload{false};
 
     float m_dpr{1.0f};
     QImage magickImageToQImage(Magick::Image &image) noexcept;
@@ -110,4 +115,5 @@ private:
     Minimap *m_minimap{nullptr};
     Config m_config;
     QString m_mimeType;
+    QFileSystemWatcher *m_file_watcher{nullptr};
 };

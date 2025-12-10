@@ -6,34 +6,33 @@
 struct Config
 {
 
-    struct UI {
-        // Minimap Settings
-        bool minimap_shown;
-        bool auto_hide_minimap;
-        QString minimap_overlay_color;
-        QString minimap_overlay_border_color;
-        int minimap_overlay_border_width;
-
-        // Scrollbar
-        bool vscrollbar_shown;
-        bool vscrollbar_auto_hide;
-        bool hscrollbar_shown;
-        bool hscrollbar_auto_hide;
-
-        // Tabs
-        bool tabs_shown;
-        bool tabs_autohide;
-
+    struct UI
+    {
+        bool minimap_shown{true};
+        bool auto_hide_minimap{true};
+        QString minimap_overlay_color{"#55FF0000"};
+        QString minimap_overlay_border_color{"#5500FF00"};
+        int minimap_overlay_border_width{1};
+        bool vscrollbar_shown{true};
+        bool vscrollbar_auto_hide{true};
+        bool hscrollbar_shown{true};
+        bool hscrollbar_auto_hide{true};
+        bool tabs_shown{true};
+        bool tabs_autohide{true};
     };
 
-    struct Rendering {
-        // Screen dpr scalar or map
+    struct Rendering
+    {
         std::variant<float, QMap<QString, float>> dpr{};
     };
 
-    // Shortcuts
-    QMap<QString, QString> shortcutMap;
+    struct Behavior
+    {
+        bool auto_reload{false};
+    };
 
+    QMap<QString, QString> shortcutMap;
     UI ui{};
     Rendering rendering{};
+    Behavior behavior{};
 };

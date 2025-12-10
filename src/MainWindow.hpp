@@ -54,6 +54,7 @@ public:
     void NextTab() noexcept;
     void SwitchToTab(int index) noexcept;
     void OpenContainingFolder() noexcept;
+    void ToggleAutoReload() noexcept;
 
 protected:
     void dragEnterEvent(QDragEnterEvent *e) override;

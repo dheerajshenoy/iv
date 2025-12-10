@@ -574,11 +574,98 @@ ImageView::setDPR(float dpr) noexcept
 #endif
 }
 
-void ImageView::reloadFile() noexcept
+bool
+ImageView::reloadFile() noexcept
 {
     if (m_filepath.isEmpty())
-        return;
+        return false;
 
-    openFile(m_filepath);
+    QFuture<void> future = QtConcurrent::run([&]
+    {
+        auto bytes  = QFileInfo(m_filepath).size();
+        QString str = humanReadableSize(bytes);
+        m_filesize  = str;
+    });
 
+    m_isGif = false;
+    stopGifAnimation();
+    m_mimeType = getMimeType(m_filepath);
+    m_success  = false;
+
+    if (m_mimeType == "image/avif")
+#ifdef HAS_LIBAVIF
+        success = renderAvif();
+#else
+    {
+        QMessageBox::warning(this, "Open File",
+                             "You have tried to open an AVIF file. IV currently does not open AVIF. Please install "
+                             "`libavif` library and then build IV again.");
+        m_success = false;
+        return m_success;
+    }
+#endif
+    else
+        m_success = render();
+
+    if (!m_success)
+    {
+        QMessageBox::critical(this, "Error opening image", "Failed to open image: " + m_filepath);
+        return m_success;
+    }
+
+    return m_success;
+}
+
+// Watch for file changes and auto-reload
+void
+ImageView::toggleAutoReload() noexcept
+{
+    setAutoReload(!m_auto_reload);
+}
+
+void
+ImageView::setAutoReload(bool enabled) noexcept
+{
+    m_auto_reload = enabled;
+    if (m_auto_reload)
+    {
+        if (!m_file_watcher)
+            m_file_watcher = new QFileSystemWatcher(this);
+
+        m_file_watcher->addPath(m_filepath);
+        connect(m_file_watcher, &QFileSystemWatcher::fileChanged, this, [&](const QString &path)
+        {
+            if (path == m_filepath)
+            {
+                QTimer::singleShot(200, this, [this]()
+                {
+                    if (waitUntilReadable(m_filepath))
+                        reloadFile();
+                    // m_file_watcher->addPath(m_filepath);
+                });
+            }
+        });
+    }
+    else
+    {
+        m_file_watcher->removePath(m_filepath);
+        disconnect(m_file_watcher, &QFileSystemWatcher::fileChanged, this, nullptr);
+        m_file_watcher->deleteLater();
+        m_file_watcher = nullptr;
+    }
+}
+
+bool
+ImageView::waitUntilReadable(const QString &file, int timeoutMs) noexcept
+{
+    QFile f(file);
+    const auto start = QDateTime::currentMSecsSinceEpoch();
+
+    while (QDateTime::currentMSecsSinceEpoch() - start < timeoutMs)
+    {
+        if (f.open(QIODevice::ReadOnly))
+            return true;
+        QThread::msleep(50);
+    }
+    return false;
 }

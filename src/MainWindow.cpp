@@ -184,9 +184,14 @@ MainWindow::OpenFile(const QString &filepath) noexcept
         fp = fp.replace(0, 1, QString::fromLocal8Bit(getenv("HOME")));
 
     m_imgv       = new ImageView(m_config, m_tab_widget);
+
     bool success = m_imgv->openFile(filepath);
     if (!success)
         return;
+
+    if (m_config.behavior.auto_reload)
+        m_imgv->setAutoReload(true);
+
     m_tab_widget->addTab(m_imgv, fp);
     m_tab_widget->setCurrentWidget(m_imgv); // Make it the active tab
     connect(m_imgv, &ImageView::openFilesRequested, this,
@@ -232,6 +237,13 @@ MainWindow::FitHeight() noexcept
 {
     if (m_imgv)
         m_imgv->fitHeight();
+}
+
+void
+MainWindow::ToggleAutoReload() noexcept
+{
+    if (m_imgv)
+        m_imgv->toggleAutoReload();
 }
 
 void
@@ -366,6 +378,13 @@ MainWindow::initConfig() noexcept
         m_config.ui.minimap_overlay_color        = ui["color"].value_or("#55FF0000");
         m_config.ui.minimap_overlay_border_color = ui["border"].value_or("#5500FF00");
         m_config.ui.minimap_overlay_border_width = ui["border_width"].value_or(0);
+    }
+
+    auto behavior = toml["behavior"];
+
+    if (behavior)
+    {
+        m_config.behavior.auto_reload = behavior["auto_reload"].value_or(false);
     }
 
     auto rendering = toml["rendering"];
@@ -551,7 +570,8 @@ MainWindow::initCommandMap() noexcept
         OpenContainingFolder();
     };
 
-    for(int i=1; i < 11; i++) {
+    for (int i = 1; i < 11; i++)
+    {
         m_commandMap[QString("tab_%1").arg(i)] = [this, i]()
         {
             SwitchToTab(i - 1);
@@ -590,7 +610,8 @@ MainWindow::Flip(Direction dir) noexcept
     }
 }
 
-void MainWindow::NextTab() noexcept
+void
+MainWindow::NextTab() noexcept
 {
     int currentIndex = m_tab_widget->currentIndex();
     int tabCount     = m_tab_widget->count();
@@ -600,7 +621,8 @@ void MainWindow::NextTab() noexcept
     m_tab_widget->setCurrentIndex(nextIndex);
 }
 
-void MainWindow::PrevTab() noexcept
+void
+MainWindow::PrevTab() noexcept
 {
     int currentIndex = m_tab_widget->currentIndex();
     int tabCount     = m_tab_widget->count();
@@ -610,7 +632,8 @@ void MainWindow::PrevTab() noexcept
     m_tab_widget->setCurrentIndex(prevIndex);
 }
 
-void MainWindow::SwitchToTab(int index) noexcept
+void
+MainWindow::SwitchToTab(int index) noexcept
 {
     int tabCount = m_tab_widget->count();
     if (index < 0 || index >= tabCount)
@@ -618,7 +641,8 @@ void MainWindow::SwitchToTab(int index) noexcept
     m_tab_widget->setCurrentIndex(index);
 }
 
-void MainWindow::OpenContainingFolder() noexcept
+void
+MainWindow::OpenContainingFolder() noexcept
 {
     if (!m_imgv)
         return;
