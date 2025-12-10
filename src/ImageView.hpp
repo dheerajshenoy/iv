@@ -97,6 +97,10 @@ public:
         return m_fit_mode;
     }
 
+    #ifdef HAS_LIBEXIV2
+    QMap<QString, QString> getEXIF() noexcept;
+    #endif
+
     void updateMinimapPosition() noexcept;
 signals:
     void openFilesRequested(const QList<QString> &files);

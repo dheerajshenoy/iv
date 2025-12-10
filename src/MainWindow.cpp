@@ -1,6 +1,7 @@
 #include "MainWindow.hpp"
 
 #include "ImageView.hpp"
+#include "PropertiesWidget.hpp"
 #include "toml.hpp"
 
 #include <QActionGroup>
@@ -75,6 +76,10 @@ MainWindow::construct() noexcept
     m_open_containing_folder_action = m_file_menu->addAction(
         QString("Open Containing Folder\t%1").arg(m_config.shortcutMap["open_containing_folder"]), this,
         &MainWindow::OpenContainingFolder);
+
+    m_file_properties_action =
+        m_file_menu->addAction(QString("File Properties\t%1").arg(m_config.shortcutMap["file_properties"]), this,
+                               &MainWindow::ShowFileProperties);
 
     m_close_file_action = m_file_menu->addAction(QString("Close File\t%1").arg(m_config.shortcutMap["close_file"]),
                                                  this, &MainWindow::CloseFile);
@@ -622,6 +627,11 @@ MainWindow::initCommandMap() noexcept
         ToggleAutoFit();
     };
 
+    m_commandMap["file_properties"] = [this]()
+    {
+        ShowFileProperties();
+    };
+
     m_commandMap["scroll_left"] = [this]()
     {
         Scroll(Direction::LEFT);
@@ -812,4 +822,23 @@ MainWindow::resizeEvent(QResizeEvent *e)
     }
 
     QMainWindow::resizeEvent(e);
+}
+
+void
+MainWindow::ShowFileProperties() noexcept
+{
+    if (!m_imgv)
+        return;
+
+#ifdef HAS_LIBEXIV2
+    PropertiesWidget *propWidget = new PropertiesWidget();
+
+    const QMap<QString, QString> props = m_imgv->getEXIF();
+    propWidget->setProperties(props);
+    propWidget->show();
+
+#else
+    QMessageBox::warning(this, "EXIF Data Unavailable",
+                         "EXIF data extraction is not available. iv was built without Exiv2 support.");
+#endif
 }

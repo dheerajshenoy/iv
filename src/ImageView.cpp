@@ -19,6 +19,10 @@
 
 #include <fstream>
 
+// #ifdef HAS_LIBEXIV2
+#include <exiv2/exiv2.hpp>
+// #endif
+
 ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m_config(config)
 {
     QVBoxLayout *layout = new QVBoxLayout();
@@ -677,3 +681,37 @@ ImageView::tryReloadLater(int attempt) noexcept
 
     QTimer::singleShot(100, this, [this, attempt]() { tryReloadLater(attempt + 1); });
 }
+
+#ifdef HAS_LIBEXIV2
+QMap<QString, QString>
+ImageView::getEXIF() noexcept
+{
+    QMap<QString, QString> exifData;
+
+    try
+    {
+        Exiv2::Image::UniquePtr image = Exiv2::ImageFactory::open(m_filepath.toStdString());
+        image->readMetadata();
+        Exiv2::ExifData &exif = image->exifData();
+
+        if (exif.empty())
+        {
+            qDebug() << "No EXIF data found in the image.";
+            return exifData;
+        }
+
+        for (const auto &datum : exif)
+        {
+            QString key   = QString::fromStdString(datum.key());
+            QString value = QString::fromStdString(datum.toString());
+            exifData.insert(key, value);
+        }
+    }
+    catch (const Exiv2::Error &e)
+    {
+        qDebug() << "Error reading EXIF data: " << e.what();
+    }
+
+    return exifData;
+}
+#endif

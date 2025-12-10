@@ -58,6 +58,7 @@ public:
     void OpenContainingFolder() noexcept;
     void ToggleAutoReload() noexcept;
     void ToggleAutoFit() noexcept;
+    void ShowFileProperties() noexcept;
 
     inline void ToggleStatusbar() const noexcept
     {
@@ -108,6 +109,7 @@ private:
     QAction *m_toggle_minimap_action{nullptr};
     QAction *m_toggle_auto_reload_action{nullptr};
     QAction *m_toggle_panel_action{nullptr};
+    QAction *m_file_properties_action{nullptr};
 
 
     TabWidget *m_tab_widget{new TabWidget()};

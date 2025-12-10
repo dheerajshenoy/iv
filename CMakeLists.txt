@@ -20,11 +20,11 @@ set(CMAKE_CXX_FLAGS_DEBUG " -fno-omit-frame-pointer -ggdb3 -O0 -Wall -Wextra")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Sql)
-# find_package(libavif QUIET)
 
 add_definitions( -DMAGICKCORE_QUANTUM_DEPTH=16 )
 add_definitions( -DMAGICKCORE_HDRI_ENABLE=0 )
 find_package(ImageMagick COMPONENTS Magick++)
+
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(MAGICKPP REQUIRED Magick++)
@@ -39,6 +39,7 @@ add_executable(${PROJECT_NAME}
     src/TabWidget.cpp
     src/Minimap.hpp
     src/Config.hpp
+    src/PropertiesWidget.hpp
 )
 
 include_directories(${MAGICKPP_INCLUDE_DIRS})
@@ -55,15 +56,23 @@ target_link_libraries(${PROJECT_NAME}
     ${MAGICKPP_LIBRARIES}
 )
 
-if(libavif_FOUND)
-    target_link_libraries(${PROJECT_NAME} avif)
-endif()
+find_library(libavif avif)
+find_library(libexiv2 exiv2)
 
-if(libavif_FOUND)
+if(libavif)
     message(STATUS "*libavif* found. Compiling with AVIF image file support")
+    target_link_libraries(${PROJECT_NAME} avif)
     target_compile_definitions(${PROJECT_NAME} PUBLIC HAS_LIBAVIF=1)
 else()
     message(STATUS "libavif not found; AVIF support will be disabled")
+endif()
+
+if(libexiv2)
+    message(STATUS "*libexiv2* found. Compiling with EXIF metadata support")
+    target_link_libraries(${PROJECT_NAME} exiv2)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC HAS_LIBEXIV2=1)
+else()
+    message(STATUS "libexiv2 not found; EXIF metadata support will be disabled")
 endif()
 
 
