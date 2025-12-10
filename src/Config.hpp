@@ -31,6 +31,9 @@ struct Config
     struct Behavior
     {
         bool auto_reload{false};
+        bool save_recent_files{true};
+        int recent_files_limit{10};
+        bool auto_fit{false};
     };
 
     QMap<QString, QString> shortcutMap;
