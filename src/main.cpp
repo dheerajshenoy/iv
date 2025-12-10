@@ -10,6 +10,7 @@ main(int argc, char *argv[])
 
     argparse::ArgumentParser program("iv", __IV_VERSION);
     program.add_argument("files").remaining().metavar("FILE_PATH(s)");
+    program.add_argument("version").flag().help("Show version information");
 
     try
     {

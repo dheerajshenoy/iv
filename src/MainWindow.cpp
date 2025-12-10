@@ -17,6 +17,14 @@
 void
 MainWindow::readArgs(argparse::ArgumentParser &parser) noexcept
 {
+    if (parser.is_used("version"))
+    {
+        qDebug() << "iv version " << __IV_VERSION;
+        qApp->exit(0);
+        return;
+    }
+
+    // Construct the main window
     this->construct();
 
     if (parser.is_used("files"))
@@ -37,7 +45,6 @@ void
 MainWindow::construct() noexcept
 {
     QVBoxLayout *layout = new QVBoxLayout();
-
     layout->addWidget(m_tab_widget);
     layout->addWidget(m_panel);
     QWidget *widget = new QWidget();
@@ -49,13 +56,20 @@ MainWindow::construct() noexcept
     initConnections();
     show();
 
-    m_tab_widget->setVisible(m_config.ui.tabs_shown);
-    m_tab_widget->setTabBarAutoHide(m_config.ui.tabs_autohide);
     this->setContentsMargins(0, 0, 0, 0);
+    m_tab_widget->setContentsMargins(0, 0, 0, 0);
     layout->setContentsMargins(0, 0, 0, 0);
     widget->setContentsMargins(0, 0, 0, 0);
     m_panel->setContentsMargins(0, 0, 0, 0);
     m_panel->layout()->setContentsMargins(5, 0, 5, 0);
+
+    // Remove frame and padding around tab widget to make it flush with window edges
+    m_tab_widget->tabBar()->setStyleSheet("QTabBar { margin: 0; padding: 0; }");
+    layout->setSpacing(0);
+    m_tab_widget->setStyleSheet("border: 0;");
+    m_tab_widget->setDocumentMode(true);
+    m_tab_widget->tabBar()->setVisible(m_config.ui.tabs_shown);
+    m_tab_widget->setTabBarAutoHide(m_config.ui.tabs_autohide);
 }
 
 void
@@ -343,12 +357,12 @@ MainWindow::initConfig() noexcept
         m_config.ui.tabs_shown    = ui["shown"].value_or(true);
         m_config.ui.tabs_autohide = ui["auto_hide"].value_or(true);
 
-        m_config.ui.hscrollbar_shown     = ui["shown"].value_or(true);
-        m_config.ui.hscrollbar_auto_hide = ui["auto_hide"].value_or(true);
-        m_config.ui.vscrollbar_shown     = ui["shown"].value_or(true);
-        m_config.ui.vscrollbar_auto_hide = ui["auto_hide"].value_or(true);
-        m_config.ui.minimap_shown     = ui["shown"].value_or(false);
-        m_config.ui.auto_hide_minimap = ui["auto_hide"].value_or(true);
+        m_config.ui.hscrollbar_shown             = ui["shown"].value_or(true);
+        m_config.ui.hscrollbar_auto_hide         = ui["auto_hide"].value_or(true);
+        m_config.ui.vscrollbar_shown             = ui["shown"].value_or(true);
+        m_config.ui.vscrollbar_auto_hide         = ui["auto_hide"].value_or(true);
+        m_config.ui.minimap_shown                = ui["shown"].value_or(false);
+        m_config.ui.auto_hide_minimap            = ui["auto_hide"].value_or(true);
         m_config.ui.minimap_overlay_color        = ui["color"].value_or("#55FF0000");
         m_config.ui.minimap_overlay_border_color = ui["border"].value_or("#5500FF00");
         m_config.ui.minimap_overlay_border_width = ui["border_width"].value_or(0);
@@ -515,6 +529,29 @@ MainWindow::initCommandMap() noexcept
     {
         Flip(Direction::DOWN);
     };
+
+    // Command to switch to tabs 0-9 and also next and prev tab
+    m_commandMap["next_tab"] = [this]()
+    {
+        NextTab();
+    };
+    m_commandMap["prev_tab"] = [this]()
+    {
+        PrevTab();
+    };
+
+    m_commandMap["tab_last"] = [this]()
+    {
+        int lastIndex = m_tab_widget->count() - 1;
+        SwitchToTab(lastIndex);
+    };
+
+    for(int i=1; i < 11; i++) {
+        m_commandMap[QString("tab_%1").arg(i)] = [this, i]()
+        {
+            SwitchToTab(i - 1);
+        };
+    }
 }
 
 void
@@ -546,4 +583,32 @@ MainWindow::Flip(Direction dir) noexcept
         default:
             break;
     }
+}
+
+void MainWindow::NextTab() noexcept
+{
+    int currentIndex = m_tab_widget->currentIndex();
+    int tabCount     = m_tab_widget->count();
+    if (tabCount == 0)
+        return;
+    int nextIndex = (currentIndex + 1) % tabCount;
+    m_tab_widget->setCurrentIndex(nextIndex);
+}
+
+void MainWindow::PrevTab() noexcept
+{
+    int currentIndex = m_tab_widget->currentIndex();
+    int tabCount     = m_tab_widget->count();
+    if (tabCount == 0)
+        return;
+    int prevIndex = (currentIndex - 1 + tabCount) % tabCount;
+    m_tab_widget->setCurrentIndex(prevIndex);
+}
+
+void MainWindow::SwitchToTab(int index) noexcept
+{
+    int tabCount = m_tab_widget->count();
+    if (index < 0 || index >= tabCount)
+        return;
+    m_tab_widget->setCurrentIndex(index);
 }
