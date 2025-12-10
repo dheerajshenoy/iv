@@ -1,6 +1,10 @@
 <p align="center"><img src="resources/icons/hicolor/256x256/apps/iv.png"></p>
 <p align="center">Minimal image viewer</p>
 
+# Screenshots
+
+![iv-screenshot](screenshots/iv-screenshot.png)
+
 # Table of Contents
 
 1. [Supported Image Formats](#supported-image-formats)

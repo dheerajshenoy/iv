@@ -50,6 +50,9 @@ public:
     void Scroll(Direction dir) noexcept;
     void Flip(Direction dir) noexcept;
     void ToggleMinimap() noexcept;
+    void PrevTab() noexcept;
+    void NextTab() noexcept;
+    void SwitchToTab(int index) noexcept;
 
 protected:
     void dragEnterEvent(QDragEnterEvent *e) override;
