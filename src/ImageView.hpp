@@ -8,6 +8,7 @@
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QFileInfo>
+#include <QFileSystemWatcher>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
 #include <QMimeData>
@@ -16,7 +17,6 @@
 #include <QScrollBar>
 #include <QVBoxLayout>
 #include <QWidget>
-#include <QFileSystemWatcher>
 
 class ImageView : public QWidget
 {
@@ -28,11 +28,19 @@ public:
     bool reloadFile() noexcept;
     void setDPR(float dpr) noexcept;
 
+    enum class FitMode
+    {
+        WINDOW = 0,
+        WIDTH,
+        HEIGHT
+    };
+
     QSize size() noexcept;
     void zoomIn() noexcept;
     void zoomOut() noexcept;
     void rotateClock() noexcept;
     void rotateAnticlock() noexcept;
+    void fitWindow() noexcept;
     void fitWidth() noexcept;
     void fitHeight() noexcept;
     void scrollLeft() noexcept;
@@ -43,6 +51,15 @@ public:
     void flipUpDown() noexcept;
     void toggleAutoReload() noexcept;
     void setAutoReload(bool enabled) noexcept;
+    inline void setAutoFit(bool enabled) noexcept
+    {
+        m_auto_fit = enabled;
+    }
+
+    inline bool autoFit() noexcept
+    {
+        return m_auto_fit;
+    }
 
     QString fileName() noexcept;
     QString baseName() noexcept;
@@ -68,6 +85,16 @@ public:
     inline bool success() noexcept
     {
         return m_success;
+    }
+
+    inline GraphicsView *gview() noexcept
+    {
+        return m_gview;
+    }
+
+    inline FitMode fitMode() noexcept
+    {
+        return m_fit_mode;
     }
 
     void updateMinimapPosition() noexcept;
@@ -101,7 +128,7 @@ private:
     bool waitUntilReadableAsync() noexcept;
     void tryReloadLater(int attempt) noexcept;
 
-    bool m_isGif{false}, m_isMinimapMode{false}, m_success{false}, m_auto_reload{false};
+    bool m_isGif{false}, m_isMinimapMode{false}, m_success{false}, m_auto_reload{false}, m_auto_fit{false};
 
     float m_dpr{1.0f};
     QImage magickImageToQImage(Magick::Image &image) noexcept;
@@ -118,4 +145,5 @@ private:
     Config m_config;
     QString m_mimeType;
     QFileSystemWatcher *m_file_watcher{nullptr};
+    FitMode m_fit_mode;
 };

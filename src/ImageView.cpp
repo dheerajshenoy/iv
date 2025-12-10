@@ -301,6 +301,7 @@ ImageView::rotateAnticlock() noexcept
 void
 ImageView::fitHeight() noexcept
 {
+    m_fit_mode = FitMode::HEIGHT;
     QTransform t;
     t.rotate(m_rotation);
     auto pixHeight  = t.mapRect(m_pix_item->boundingRect()).height();
@@ -316,6 +317,7 @@ ImageView::fitHeight() noexcept
 void
 ImageView::fitWidth() noexcept
 {
+    m_fit_mode = FitMode::WIDTH;
     QTransform t;
     t.rotate(m_rotation);
 
@@ -326,6 +328,14 @@ ImageView::fitWidth() noexcept
 
     t.scale(scaleFactor, scaleFactor);
     m_gview->setTransform(t);
+    m_gview->centerOn(m_pix_item);
+}
+
+void
+ImageView::fitWindow() noexcept
+{
+    m_fit_mode = FitMode::WINDOW;
+    m_gview->fitInView(m_pix_item, Qt::KeepAspectRatio);
     m_gview->centerOn(m_pix_item);
 }
 
@@ -486,8 +496,8 @@ ImageView::updateMinimapRegion() noexcept
     if (m_minimap->forceHidden())
         return;
 
-    QRectF visible = m_gview->mapToScene(m_gview->viewport()->rect()).boundingRect();
-    QRectF image   = m_pix_item->sceneBoundingRect(); // Full image, in scene coords
+    const QRectF visible = m_gview->mapToScene(m_gview->viewport()->rect()).boundingRect();
+    const QRectF image   = m_pix_item->sceneBoundingRect(); // Full image, in scene coords
 
     bool fullyVisible = visible.contains(image);
     m_minimap->setVisible(!fullyVisible);
