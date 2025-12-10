@@ -546,6 +546,11 @@ MainWindow::initCommandMap() noexcept
         SwitchToTab(lastIndex);
     };
 
+    m_commandMap["open_containing_folder"] = [this]()
+    {
+        OpenContainingFolder();
+    };
+
     for(int i=1; i < 11; i++) {
         m_commandMap[QString("tab_%1").arg(i)] = [this, i]()
         {
@@ -611,4 +616,12 @@ void MainWindow::SwitchToTab(int index) noexcept
     if (index < 0 || index >= tabCount)
         return;
     m_tab_widget->setCurrentIndex(index);
+}
+
+void MainWindow::OpenContainingFolder() noexcept
+{
+    if (!m_imgv)
+        return;
+    QString filedir = m_imgv->fileDir();
+    QDesktopServices::openUrl(QUrl(filedir));
 }

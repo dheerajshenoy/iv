@@ -53,6 +53,7 @@ public:
     void PrevTab() noexcept;
     void NextTab() noexcept;
     void SwitchToTab(int index) noexcept;
+    void OpenContainingFolder() noexcept;
 
 protected:
     void dragEnterEvent(QDragEnterEvent *e) override;
