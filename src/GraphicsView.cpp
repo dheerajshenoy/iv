@@ -66,9 +66,9 @@ GraphicsView::nativeGestureEvent(QNativeGestureEvent *event) noexcept
         if (event->gestureType() == Qt::ZoomNativeGesture)
         {
             if (event->value() > 0)
-                scale(m_zoomFactor, m_zoomFactor); // Zoom in
+                emit zoomInRequested();
             else
-                scale(1.0 / m_zoomFactor, 1.0 / m_zoomFactor); // Zoom out
+                emit zoomOutRequested();
             return true;
         }
     }

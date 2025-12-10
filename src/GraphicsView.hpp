@@ -23,6 +23,8 @@ public:
 
 signals:
     void openFilesRequested(const QList<QString> &files);
+    void zoomInRequested();
+    void zoomOutRequested();
 
 protected:
     bool event(QEvent *event) override
