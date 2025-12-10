@@ -97,7 +97,9 @@ private:
     void updateMinimapRegion() noexcept;
     QString getMimeType(const QString &filepath) noexcept;
 
-    bool waitUntilReadable(const QString &file, int timeoutMs = 1000) noexcept;
+    void onFileReloadRequested(const QString &path) noexcept;
+    bool waitUntilReadableAsync() noexcept;
+    void tryReloadLater(int attempt) noexcept;
 
     bool m_isGif{false}, m_isMinimapMode{false}, m_success{false}, m_auto_reload{false};
 

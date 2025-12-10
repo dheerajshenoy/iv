@@ -60,8 +60,6 @@ MainWindow::construct() noexcept
     m_tab_widget->setContentsMargins(0, 0, 0, 0);
     layout->setContentsMargins(0, 0, 0, 0);
     widget->setContentsMargins(0, 0, 0, 0);
-    m_panel->setContentsMargins(0, 0, 0, 0);
-    m_panel->layout()->setContentsMargins(5, 0, 5, 0);
 
     // Remove frame and padding around tab widget to make it flush with window edges
     m_tab_widget->tabBar()->setStyleSheet("QTabBar { margin: 0; padding: 0; }");

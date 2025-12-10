@@ -27,6 +27,9 @@ ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m
     m_gview->setScene(m_gscene);
     m_gscene->addItem(m_pix_item);
 
+    layout->setContentsMargins(0, 0, 0, 0);
+    m_gview->setContentsMargins(0, 0, 0, 0);
+
     m_minimap = new Minimap(m_gview);
     m_minimap->setOverlayRectColor(QColor::fromString(m_config.ui.minimap_overlay_color));
     m_minimap->setOverlayRectBorderWidth(m_config.ui.minimap_overlay_border_width);
@@ -234,7 +237,13 @@ ImageView::render() noexcept
     catch (const Magick::ErrorFileOpen &e)
     {
         qDebug() << "Error opening image: " << e.what();
-        QMessageBox::critical(this, "Error opening image: ", e.what());
+        // QMessageBox::critical(this, "Error opening image: ", e.what());
+        return false;
+    }
+    catch (const Magick::ErrorCorruptImage &e)
+    {
+        qDebug() << "Error corrupt image: " << e.what();
+        // QMessageBox::critical(this, "Error corrupt image: ", e.what());
         return false;
     }
     catch (const Magick::ErrorMissingDelegate &e)
@@ -609,7 +618,8 @@ ImageView::reloadFile() noexcept
 
     if (!m_success)
     {
-        QMessageBox::critical(this, "Error opening image", "Failed to open image: " + m_filepath);
+        if (!m_auto_reload)
+            QMessageBox::critical(this, "Error opening image", "Failed to open image: " + m_filepath);
         return m_success;
     }
 
@@ -632,40 +642,55 @@ ImageView::setAutoReload(bool enabled) noexcept
         if (!m_file_watcher)
             m_file_watcher = new QFileSystemWatcher(this);
 
-        m_file_watcher->addPath(m_filepath);
-        connect(m_file_watcher, &QFileSystemWatcher::fileChanged, this, [&](const QString &path)
-        {
-            if (path == m_filepath)
-            {
-                QTimer::singleShot(200, this, [this]()
-                {
-                    if (waitUntilReadable(m_filepath))
-                        reloadFile();
-                    // m_file_watcher->addPath(m_filepath);
-                });
-            }
-        });
+        if (!m_file_watcher->files().contains(m_filepath))
+            m_file_watcher->addPath(m_filepath);
+
+        connect(m_file_watcher, &QFileSystemWatcher::fileChanged, this, &ImageView::onFileReloadRequested,
+                Qt::UniqueConnection);
     }
     else
     {
-        m_file_watcher->removePath(m_filepath);
-        disconnect(m_file_watcher, &QFileSystemWatcher::fileChanged, this, nullptr);
-        m_file_watcher->deleteLater();
-        m_file_watcher = nullptr;
+        if (m_file_watcher)
+        {
+            m_file_watcher->removePath(m_filepath);
+            m_file_watcher->deleteLater();
+            m_file_watcher = nullptr;
+        }
     }
 }
 
 bool
-ImageView::waitUntilReadable(const QString &file, int timeoutMs) noexcept
+ImageView::waitUntilReadableAsync() noexcept
 {
-    QFile f(file);
-    const auto start = QDateTime::currentMSecsSinceEpoch();
+    QFile f(m_filepath);
+    return f.open(QIODevice::ReadOnly);
+}
 
-    while (QDateTime::currentMSecsSinceEpoch() - start < timeoutMs)
+void
+ImageView::onFileReloadRequested(const QString &path) noexcept
+{
+    if (path != m_filepath)
+        return;
+
+    tryReloadLater(0);
+}
+
+void
+ImageView::tryReloadLater(int attempt) noexcept
+{
+    if (attempt > 15) // ~15 * 100ms = 1.5s
+        return;       // give up
+
+    if (waitUntilReadableAsync())
     {
-        if (f.open(QIODevice::ReadOnly))
-            return true;
-        QThread::msleep(50);
+        reloadFile();
+
+        // IMPORTANT: file may have been removed and replaced → watcher loses it
+        if (m_file_watcher && !m_file_watcher->files().contains(m_filepath))
+            m_file_watcher->addPath(m_filepath);
+
+        return;
     }
-    return false;
+
+    QTimer::singleShot(100, this, [this, attempt]() { tryReloadLater(attempt + 1); });
 }
