@@ -18,6 +18,10 @@ public:
         m_zoomFactor = factor;
     }
 
+    inline void recenterImage() noexcept {
+        centerOn(0, 0);
+    }
+
     void zoomIn() noexcept;
     void zoomOut() noexcept;
 

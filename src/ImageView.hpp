@@ -103,9 +103,9 @@ public:
         return m_fit_mode;
     }
 
-    #ifdef HAS_LIBEXIV2
+#ifdef HAS_LIBEXIV2
     QMap<QString, QString> getEXIF() noexcept;
-    #endif
+#endif
 
     void updateMinimapPosition() noexcept;
 signals:
@@ -138,7 +138,7 @@ private:
     bool waitUntilReadableAsync() noexcept;
     void tryReloadLater(int attempt) noexcept;
 
-    bool m_isGif{false}, m_isMinimapMode{false}, m_success{false}, m_auto_reload{false}, m_auto_fit{false};
+    bool m_isGif{false}, m_success{false}, m_auto_reload{false}, m_auto_fit{false};
 
     float m_dpr{1.0f};
     QImage magickImageToQImage(Magick::Image &image) noexcept;

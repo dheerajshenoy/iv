@@ -93,7 +93,7 @@ ImageView::openFile(const QString &filepath) noexcept
     }
 
     m_gview->fitInView(m_pix_item, Qt::KeepAspectRatio);
-    m_gview->centerOn(m_pix_item);
+    // m_gview->centerOn(m_pix_item);
 
     return m_success;
 }
@@ -267,39 +267,51 @@ void
 ImageView::zoomIn() noexcept
 {
     m_gview->zoomIn();
-
-    if (m_isMinimapMode)
-        updateMinimapRegion();
+    updateMinimapRegion();
 }
 
 void
 ImageView::zoomOut() noexcept
 {
     m_gview->zoomOut();
-    if (m_isMinimapMode)
-        updateMinimapRegion();
+    updateMinimapRegion();
 }
 
 void
 ImageView::rotateClock() noexcept
 {
-    m_rotation     = (m_rotation + 90) % 360;
-    QTransform mat = m_gview->transform();
-    mat.rotate(90);
-    m_gview->setTransform(mat);
-    m_minimap->setTransform(mat);
-    m_gview->centerOn(m_pix_item);
+    m_rotation = (m_rotation + 90) % 360;
+
+    // Rotate around pixmap center
+    m_pix_item->setTransformOriginPoint(m_pix_item->boundingRect().center());
+    m_pix_item->setRotation(m_rotation);
+
+    // Update scene rect to the new rotated bounds
+    m_gscene->setSceneRect(m_pix_item->sceneBoundingRect());
+
+    // Keep the view centered on the pixmap
+    // m_gview->centerOn(m_pix_item);
+    m_minimap->setRotation(m_rotation);
+
+    // Update minimap overlay
+    updateMinimapRegion();
 }
 
 void
 ImageView::rotateAnticlock() noexcept
 {
-    m_rotation     = (m_rotation - 90) % 360;
-    QTransform mat = m_gview->transform();
-    mat.rotate(-90);
-    m_gview->setTransform(mat);
-    m_minimap->setTransform(mat);
-    m_gview->centerOn(m_pix_item);
+    m_rotation = (m_rotation - 90) % 360;
+
+    // Rotate around pixmap center
+    m_pix_item->setTransformOriginPoint(m_pix_item->boundingRect().center());
+    m_pix_item->setRotation(m_rotation);
+
+    // Keep the view centered on the pixmap
+    // m_gview->centerOn(m_pix_item);
+
+    m_minimap->setRotation(m_rotation);
+    // Update minimap overlay
+    updateMinimapRegion();
 }
 
 void
@@ -315,7 +327,7 @@ ImageView::fitHeight() noexcept
 
     t.scale(scaleFactor, scaleFactor);
     m_gview->setTransform(t);
-    m_gview->centerOn(m_pix_item);
+    // m_gview->centerOn(m_pix_item);
 }
 
 void
@@ -332,7 +344,7 @@ ImageView::fitWidth() noexcept
 
     t.scale(scaleFactor, scaleFactor);
     m_gview->setTransform(t);
-    m_gview->centerOn(m_pix_item);
+    // m_gview->centerOn(m_pix_item);
 }
 
 void
@@ -340,7 +352,7 @@ ImageView::fitWindow() noexcept
 {
     m_fit_mode = FitMode::WINDOW;
     m_gview->fitInView(m_pix_item, Qt::KeepAspectRatio);
-    m_gview->centerOn(m_pix_item);
+    // m_gview->centerOn(m_pix_item);
 }
 
 void
@@ -501,10 +513,15 @@ ImageView::updateMinimapRegion() noexcept
     if (m_minimap->forceHidden())
         return;
 
-    const QRectF visible = m_gview->mapToScene(m_gview->viewport()->rect()).boundingRect();
-    const QRectF image   = m_pix_item->sceneBoundingRect(); // Full image, in scene coords
+    QRectF visible = m_gview->mapToScene(m_gview->viewport()->rect()).boundingRect();
+    QRectF image   = m_pix_item->sceneBoundingRect(); // Full image, in scene coords
 
-    bool fullyVisible = visible.contains(image);
+    // Use a small tolerance to account for rounding errors / transforms
+    constexpr qreal EPS = 1.0;
+
+    bool fullyVisible = (visible.left() <= image.left() + EPS && visible.top() <= image.top() + EPS &&
+                         visible.right() >= image.right() - EPS && visible.bottom() >= image.bottom() - EPS);
+
     m_minimap->setVisible(!fullyVisible);
 
     if (!fullyVisible)
@@ -562,6 +579,7 @@ void
 ImageView::resizeEvent(QResizeEvent *e)
 {
     updateMinimapPosition();
+    updateMinimapRegion();
     QWidget::resizeEvent(e);
 }
 

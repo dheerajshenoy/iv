@@ -1,27 +1,36 @@
 #pragma once
 
 #include <QBrush>
+#include <QGraphicsItem>
 #include <QGraphicsPixmapItem>
+#include <QGraphicsScene>
+#include <QGraphicsView>
+#include <QPen>
+#include <QResizeEvent>
 #include <QVBoxLayout>
 #include <QWidget>
-#include <qgraphicsitem.h>
-#include <qgraphicsscene.h>
-#include <qgraphicsview.h>
 
 class Minimap : public QGraphicsView
 {
     Q_OBJECT
 public:
-    Minimap(QGraphicsView *parent = nullptr) : QGraphicsView(parent)
+    explicit Minimap(QGraphicsView *parent = nullptr) : QGraphicsView(parent)
     {
+        // Scene setup
         setScene(m_scene);
         setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        m_overlay_rect->setPen(QPen(QColor(255, 0, 0, 100), 5));
-        m_overlay_rect->setBrush(QBrush(QColor(255, 0, 0, 75)));
-        setFrameShadow(QGraphicsView::Plain);
-        setFrameShape(QGraphicsView::NoFrame);
+        setFrameShape(QFrame::NoFrame);
+        setFrameShadow(QFrame::Plain);
+        setBackgroundBrush(Qt::NoBrush);
+        setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+
+        // Overlay rectangle
+        m_overlay_rect->setPen(QPen(QColor(255, 0, 0, 150), 3));
+        m_overlay_rect->setBrush(QColor(255, 0, 0, 75));
         m_overlay_rect->setZValue(10);
+
+        // Add items to scene
         m_scene->addItem(m_pix_item);
         m_scene->addItem(m_overlay_rect);
     }
@@ -42,15 +51,20 @@ public:
     void showOverlayOnly(bool enabled) noexcept
     {
         m_pix_item->setVisible(!enabled);
-        m_scene->setSceneRect(m_pix_item->boundingRect());
-        fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
+        updateSceneRect();
     }
 
     void setPixmap(const QPixmap &pix) noexcept
     {
         m_pix_item->setPixmap(pix);
-        m_scene->setSceneRect(m_pix_item->boundingRect());
-        fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
+        updateSceneRect();
+    }
+
+    void setRotation(int angle) noexcept
+    {
+        m_pix_item->setTransformOriginPoint(m_pix_item->boundingRect().center());
+        m_pix_item->setRotation(angle);
+        updateSceneRect();
     }
 
     inline void setPixmapOpacity(qreal opacity) noexcept
@@ -68,7 +82,23 @@ public:
         m_overlay_rect->setBrush(color);
     }
 
-    inline bool forceHidden() noexcept
+    inline void setOverlayRectBorderWidth(int width) noexcept
+    {
+        if (width < 0)
+            return;
+        QPen pen = m_overlay_rect->pen();
+        pen.setWidth(width);
+        m_overlay_rect->setPen(pen);
+    }
+
+    inline void setOverlayRectBorderColor(const QColor &color) noexcept
+    {
+        QPen pen = m_overlay_rect->pen();
+        pen.setColor(color);
+        m_overlay_rect->setPen(pen);
+    }
+
+    inline bool forceHidden() const noexcept
     {
         return m_force_hidden;
     }
@@ -76,32 +106,14 @@ public:
     inline void setForceHidden(bool state) noexcept
     {
         m_force_hidden = state;
-        if (state)
-            setVisible(false);
-    }
-
-    inline void setOverlayRectBorderWidth(int width) noexcept
-    {
-        if (width < 0)
-            return;
-
-        QPen p = m_overlay_rect->pen();
-        p.setWidth(width);
-        m_overlay_rect->setPen(p);
-    }
-
-    inline void setOverlayRectBorderColor(const QColor &color) noexcept
-    {
-        QPen p = m_overlay_rect->pen();
-        p.setColor(color);
-        m_overlay_rect->setPen(p);
+        setVisible(!state);
     }
 
     void setMinimapSize(int w, int h)
     {
-        setMinimumSize(1, 1); // allow any size
-        resize(w, h);         // apply user-requested size
-        fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
+        setMinimumSize(1, 1);
+        resize(w, h);
+        updateSceneRect();
     }
 
     inline void setLocation(Location loc) noexcept
@@ -109,7 +121,7 @@ public:
         m_location = loc;
     }
 
-    inline Location location() noexcept
+    inline Location location() const noexcept
     {
         return m_location;
     }
@@ -118,12 +130,19 @@ protected:
     void resizeEvent(QResizeEvent *event) override
     {
         QGraphicsView::resizeEvent(event);
-
-        // keep the image fitted to the new widget size
-        fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
+        updateSceneRect();
     }
 
 private:
+    void updateSceneRect()
+    {
+        if (!m_pix_item->pixmap().isNull() && m_pix_item->isVisible())
+        {
+            m_scene->setSceneRect(m_pix_item->sceneBoundingRect());
+            fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
+        }
+    }
+
     bool m_force_hidden{false};
     QGraphicsPixmapItem *m_pix_item{new QGraphicsPixmapItem()};
     QGraphicsScene *m_scene{new QGraphicsScene(this)};
