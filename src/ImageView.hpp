@@ -65,7 +65,12 @@ public:
         return m_auto_fit;
     }
 
-    void UpdateConfig(const Config &config) noexcept;
+    inline void setConfig(const Config &config) noexcept
+    {
+        m_config = config;
+    }
+
+    void UpdateFromConfig() noexcept;
 
     QString fileName() noexcept;
     QString baseName() noexcept;
@@ -86,6 +91,25 @@ public:
     {
         m_minimap->setForceHidden(!m_minimap->forceHidden());
         updateMinimapRegion();
+    }
+
+    inline void setOverlayRectColor(const QColor &color) noexcept
+    {
+        if (color.isValid())
+            m_overlay_rect->setBrush(color);
+    }
+
+    inline void setOverlayRectBorderWidth(int width) noexcept
+    {
+        if (width < 0)
+            return;
+        m_overlay_rect->setPen(QPen(m_overlay_rect->pen().color(), width));
+    }
+
+    inline void setOverlayRectBorderColor(const QColor &color) noexcept
+    {
+        if (color.isValid())
+            m_overlay_rect->setPen(QPen(color, m_overlay_rect->pen().width()));
     }
 
     inline bool success() noexcept
@@ -152,6 +176,7 @@ private:
     QScrollBar *m_vscrollbar, *m_hscrollbar;
     QMovie *m_movie{nullptr};
     Minimap *m_minimap{nullptr};
+    OverlayRect *m_overlay_rect{nullptr};
     Config m_config;
     QString m_mimeType;
     QFileSystemWatcher *m_file_watcher{nullptr};

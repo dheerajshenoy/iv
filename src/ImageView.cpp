@@ -36,38 +36,36 @@ ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m
     m_gview->setContentsMargins(0, 0, 0, 0);
 
     m_minimap = new Minimap(m_gview);
-    m_minimap->setLocation(m_config.ui.minimap_location);
-    m_minimap->setMinimapSize(m_config.ui.minimap_size[0], m_config.ui.minimap_size[1]);
-    m_minimap->setPixmapOpacity(m_config.ui.minimap_image_opacity);
-    m_minimap->setOverlayRectColor(QColor::fromString(m_config.ui.minimap_overlay_color));
-    m_minimap->setOverlayRectBorderWidth(m_config.ui.minimap_overlay_border_width);
-    m_minimap->setOverlayRectBorderColor(QColor::fromString(m_config.ui.minimap_overlay_border_color));
     m_minimap->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     m_minimap->raise();
-    m_minimap->setForceHidden(!m_config.ui.minimap_shown);
+
+    // Minimap click to move viewport
+    connect(m_minimap, &Minimap::minimapClicked, this, [this](const QPointF &pos)
+    {
+        m_gview->centerOn(pos);
+        updateMinimapRegion();
+    });
+
+    // Overlay rectangle
+    m_overlay_rect = new OverlayRect();
+    m_overlay_rect->setImageItem(m_pix_item);
+    m_overlay_rect->setMainView(m_minimap);
+    m_minimap->scene()->addItem(m_overlay_rect);
+
+    // Overlay moved handler
+    connect(m_overlay_rect, &OverlayRect::overlayMoved, this, [this]()
+    {
+        const QRectF overlayRect    = m_overlay_rect->boundingRect(); // overlay in scene coords
+        const QPointF overlayCenter = m_overlay_rect->mapToScene(overlayRect.center());
+        m_gview->centerOn(overlayCenter);
+        updateMinimapRegion();
+    });
 
     setLayout(layout);
     m_hscrollbar = m_gview->horizontalScrollBar();
     m_vscrollbar = m_gview->verticalScrollBar();
 
-    if (!m_config.ui.vscrollbar_auto_hide)
-        m_gview->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-
-    if (!m_config.ui.vscrollbar_shown)
-        m_gview->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
-    if (!m_config.ui.hscrollbar_auto_hide)
-        m_gview->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-
-    if (!m_config.ui.hscrollbar_shown)
-        m_gview->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
-    if (m_config.ui.minimap_shown)
-    {
-        connect(m_hscrollbar, &QScrollBar::valueChanged, this, [&](int /*value */) { updateMinimapRegion(); });
-        connect(m_vscrollbar, &QScrollBar::valueChanged, this, [&](int /*value */) { updateMinimapRegion(); });
-        connect(m_gview, &GraphicsView::openFilesRequested, this, &ImageView::openFilesRequested);
-    }
+    UpdateFromConfig();
 }
 
 bool
@@ -432,7 +430,7 @@ ImageView::renderAnimatedImage() noexcept
     {
         m_movie->stop();
         disconnect(m_movie, &QMovie::frameChanged, this, &ImageView::updateGifFrame);
-        delete m_movie;
+        m_movie->deleteLater();
         m_movie = nullptr;
     }
     m_isGif = true;
@@ -513,19 +511,36 @@ ImageView::updateMinimapRegion() noexcept
     if (m_minimap->forceHidden())
         return;
 
-    QRectF visible = m_gview->mapToScene(m_gview->viewport()->rect()).boundingRect();
-    QRectF image   = m_pix_item->sceneBoundingRect(); // Full image, in scene coords
+    // Full image rect in scene coordinates
+    QRectF imageRect = m_pix_item->sceneBoundingRect();
 
-    // Use a small tolerance to account for rounding errors / transforms
+    // Current visible viewport in scene coordinates
+    QRectF viewRect = m_gview->mapToScene(m_gview->viewport()->rect()).boundingRect();
+
+    // Clamp viewRect inside imageRect
+    QRectF clampedRect = viewRect.intersected(imageRect);
+
+    // Update overlay rectangle in minimap coordinates
+    if (!clampedRect.isNull())
+    {
+        // Block signals to prevent triggering overlayMoved
+        m_overlay_rect->blockSignals(true);
+
+        // Set the position to the top-left of the clamped rect
+        m_overlay_rect->setPos(clampedRect.topLeft());
+
+        // Set the rectangle size (in local coordinates, starting at 0,0)
+        m_overlay_rect->setRect(0, 0, clampedRect.width(), clampedRect.height());
+
+        // Unblock signals
+        m_overlay_rect->blockSignals(false);
+    }
+
+    // Hide minimap if the entire image fits in the viewport
     constexpr qreal EPS = 1.0;
-
-    bool fullyVisible = (visible.left() <= image.left() + EPS && visible.top() <= image.top() + EPS &&
-                         visible.right() >= image.right() - EPS && visible.bottom() >= image.bottom() - EPS);
-
+    bool fullyVisible   = (viewRect.left() <= imageRect.left() + EPS && viewRect.top() <= imageRect.top() + EPS &&
+                         viewRect.right() >= imageRect.right() - EPS && viewRect.bottom() >= imageRect.bottom() - EPS);
     m_minimap->setVisible(!fullyVisible);
-
-    if (!fullyVisible)
-        m_minimap->setOverlayRect(visible); // Pass in scene-space rect
 }
 
 void
@@ -633,9 +648,6 @@ ImageView::loadImage(const QImage &img) noexcept
     if (!m_config.ui.minimap_image)
         m_minimap->showOverlayOnly(true);
 
-    // int margin    = 50;
-    // TODO: consider padding ?
-    // QRectF padded = m_pix_item->boundingRect().adjusted(-margin, -margin, margin, margin);
     m_gview->setSceneRect(m_pix_item->boundingRect());
 }
 
@@ -780,14 +792,18 @@ ImageView::getEXIF() noexcept
 #endif
 
 void
-ImageView::UpdateConfig(const Config &config) noexcept
+ImageView::UpdateFromConfig() noexcept
 {
-    m_config = config;
     m_minimap->setForceHidden(!m_config.ui.minimap_shown);
     m_minimap->setPixmapOpacity(m_config.ui.minimap_image_opacity);
-    m_minimap->setOverlayRectColor(QColor::fromString(m_config.ui.minimap_overlay_color));
-    m_minimap->setOverlayRectBorderWidth(m_config.ui.minimap_overlay_border_width);
-    m_minimap->setOverlayRectBorderColor(QColor::fromString(m_config.ui.minimap_overlay_border_color));
+    m_minimap->setLocation(m_config.ui.minimap_location);
+    m_minimap->setMinimapScale(m_config.ui.minimap_scale);
+
+    m_minimap->setClickable(m_config.ui.minimap_clickable);
+    m_overlay_rect->setClickable(m_config.ui.minimap_overlay_movable);
+    setOverlayRectColor(QColor::fromString(m_config.ui.minimap_overlay_color));
+    setOverlayRectBorderWidth(m_config.ui.minimap_overlay_border_width);
+    setOverlayRectBorderColor(QColor::fromString(m_config.ui.minimap_overlay_border_color));
 
     m_minimap->setPixmap(m_pix);
     if (!m_config.ui.minimap_image)

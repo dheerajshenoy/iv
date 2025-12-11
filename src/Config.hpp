@@ -13,9 +13,11 @@ struct Config
         bool minimap_shown{true};
         bool minimap_auto_hide{true};
         bool minimap_image{true};
-        int minimap_size[2]{100, 100};
+        float minimap_scale{0.2f};
         float minimap_image_opacity{0.7f};
         Minimap::Location minimap_location{Minimap::Location::BOTTOM_RIGHT};
+        bool minimap_overlay_movable{true};
+        bool minimap_clickable{true};
 
         QString minimap_overlay_color{"#55FF0000"};
         QString minimap_overlay_border_color{"#5500FF00"};

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "OverlayRect.hpp"
+
 #include <QBrush>
 #include <QGraphicsItem>
 #include <QGraphicsPixmapItem>
@@ -25,14 +27,8 @@ public:
         setBackgroundBrush(Qt::NoBrush);
         setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
 
-        // Overlay rectangle
-        m_overlay_rect->setPen(QPen(QColor(255, 0, 0, 150), 3));
-        m_overlay_rect->setBrush(QColor(255, 0, 0, 75));
-        m_overlay_rect->setZValue(10);
-
         // Add items to scene
         m_scene->addItem(m_pix_item);
-        m_scene->addItem(m_overlay_rect);
     }
 
     enum class Location
@@ -47,6 +43,11 @@ public:
         CENTER,
         CENTER_RIGHT
     };
+
+    inline void setClickable(bool clickable) noexcept
+    {
+        setInteractive(clickable);
+    }
 
     void showOverlayOnly(bool enabled) noexcept
     {
@@ -72,32 +73,6 @@ public:
         m_pix_item->setOpacity(opacity);
     }
 
-    inline void setOverlayRect(const QRectF &rect) noexcept
-    {
-        m_overlay_rect->setRect(rect);
-    }
-
-    inline void setOverlayRectColor(const QColor &color) noexcept
-    {
-        m_overlay_rect->setBrush(color);
-    }
-
-    inline void setOverlayRectBorderWidth(int width) noexcept
-    {
-        if (width < 0)
-            return;
-        QPen pen = m_overlay_rect->pen();
-        pen.setWidth(width);
-        m_overlay_rect->setPen(pen);
-    }
-
-    inline void setOverlayRectBorderColor(const QColor &color) noexcept
-    {
-        QPen pen = m_overlay_rect->pen();
-        pen.setColor(color);
-        m_overlay_rect->setPen(pen);
-    }
-
     inline bool forceHidden() const noexcept
     {
         return m_force_hidden;
@@ -109,11 +84,12 @@ public:
         setVisible(!state);
     }
 
-    void setMinimapSize(int w, int h)
+    void setMinimapScale(qreal s) noexcept
     {
-        setMinimumSize(1, 1);
-        resize(w, h);
-        updateSceneRect();
+        QTransform t;
+        t.scale(s, s);      // absolute scale
+        setTransform(t);    // replace the current transform
+        // updateSceneRect();  // adjust the scene rect if needed
     }
 
     inline void setLocation(Location loc) noexcept
@@ -126,26 +102,35 @@ public:
         return m_location;
     }
 
+signals:
+    void minimapClicked(const QPointF &pos);
+
 protected:
     void resizeEvent(QResizeEvent *event) override
     {
-        QGraphicsView::resizeEvent(event);
         updateSceneRect();
+        QGraphicsView::resizeEvent(event);
+    }
+
+    void mousePressEvent(QMouseEvent *event) override
+    {
+        emit minimapClicked(mapToScene(event->pos()));
+        QGraphicsView::mousePressEvent(event);
     }
 
 private:
     void updateSceneRect()
     {
-        if (!m_pix_item->pixmap().isNull() && m_pix_item->isVisible())
+        if (!m_pix_item->pixmap().isNull())
         {
             m_scene->setSceneRect(m_pix_item->sceneBoundingRect());
-            fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
+            // fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
         }
     }
 
     bool m_force_hidden{false};
     QGraphicsPixmapItem *m_pix_item{new QGraphicsPixmapItem()};
     QGraphicsScene *m_scene{new QGraphicsScene(this)};
-    QGraphicsRectItem *m_overlay_rect{new QGraphicsRectItem()};
     Location m_location{Location::BOTTOM_RIGHT};
+    QPointF m_dragStart;
 };

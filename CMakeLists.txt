@@ -40,6 +40,7 @@ add_executable(${PROJECT_NAME}
     src/Minimap.hpp
     src/Config.hpp
     src/PropertiesWidget.hpp
+    src/OverlayRect.hpp
 )
 
 include_directories(${MAGICKPP_INCLUDE_DIRS})

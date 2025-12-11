@@ -15,3 +15,6 @@
     - size
     - opacity
 - Go to edge commands
+- Fix minimap rotation Bug
+- Fix zoom minimap Bug
+- Minimap overlay move to move viewport
