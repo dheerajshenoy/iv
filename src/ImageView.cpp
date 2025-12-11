@@ -36,6 +36,7 @@ ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m
     m_gview->setContentsMargins(0, 0, 0, 0);
 
     m_minimap = new Minimap(m_gview);
+    m_minimap->setPixmapOpacity(m_config.ui.minimap_image_opacity);
     m_minimap->setOverlayRectColor(QColor::fromString(m_config.ui.minimap_overlay_color));
     m_minimap->setOverlayRectBorderWidth(m_config.ui.minimap_overlay_border_width);
     m_minimap->setOverlayRectBorderColor(QColor::fromString(m_config.ui.minimap_overlay_border_color));
@@ -433,11 +434,12 @@ ImageView::updateGifFrame(int /*frameNumber*/) noexcept
         return;
 
     QPixmap frame = m_movie->currentPixmap();
+
     m_pix_item->setPixmap(frame);
+
     m_minimap->setPixmap(frame);
-    // int margin        = 100;
-    // QRectF paddedRect = m_pix_item->boundingRect().adjusted(-margin, -margin, margin, margin);
-    // m_gscene->setSceneRect(paddedRect);
+    if (!m_config.ui.minimap_image)
+        m_minimap->showOverlayOnly(true);
 }
 
 void
@@ -566,7 +568,10 @@ ImageView::loadImage(const QImage &img) noexcept
 
     m_pix.setDevicePixelRatio(m_dpr);
     m_pix_item->setPixmap(m_pix);
+
     m_minimap->setPixmap(m_pix);
+    if (!m_config.ui.minimap_image)
+        m_minimap->showOverlayOnly(true);
 
     int margin    = 50;
     QRectF padded = m_pix_item->boundingRect().adjusted(-margin, -margin, margin, margin);
@@ -718,9 +723,14 @@ ImageView::UpdateConfig(const Config &config) noexcept
 {
     m_config = config;
     m_minimap->setForceHidden(!m_config.ui.minimap_shown);
+    m_minimap->setPixmapOpacity(m_config.ui.minimap_image_opacity);
     m_minimap->setOverlayRectColor(QColor::fromString(m_config.ui.minimap_overlay_color));
     m_minimap->setOverlayRectBorderWidth(m_config.ui.minimap_overlay_border_width);
     m_minimap->setOverlayRectBorderColor(QColor::fromString(m_config.ui.minimap_overlay_border_color));
+
+    m_minimap->setPixmap(m_pix);
+    if (!m_config.ui.minimap_image)
+        m_minimap->showOverlayOnly(true);
 
     // Disconnect old connections to avoid duplicates
     disconnect(m_hscrollbar, &QScrollBar::valueChanged, this, nullptr);
@@ -744,5 +754,5 @@ ImageView::UpdateConfig(const Config &config) noexcept
         connect(m_vscrollbar, &QScrollBar::valueChanged, this, [&](int /*value */) { updateMinimapRegion(); });
         connect(m_gview, &GraphicsView::openFilesRequested, this, &ImageView::openFilesRequested);
     }
-    qDebug() << "ImageView UPDATED";
+
 }

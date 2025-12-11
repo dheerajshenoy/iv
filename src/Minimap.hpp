@@ -29,14 +29,23 @@ public:
         m_scene->addItem(m_overlay_rect);
     }
 
+    void showOverlayOnly(bool enabled) noexcept
+    {
+        m_pix_item->setVisible(!enabled);
+        m_scene->setSceneRect(m_pix_item->sceneBoundingRect());
+        fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
+    }
+
     void setPixmap(const QPixmap &pix) noexcept
     {
         m_pix_item->setPixmap(pix);
-
-        // Mirror the main view’s scene rect — don’t create your own
         m_scene->setSceneRect(m_pix_item->sceneBoundingRect());
-
         fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
+    }
+
+    inline void setPixmapOpacity(qreal opacity) noexcept
+    {
+        m_pix_item->setOpacity(opacity);
     }
 
     inline void setOverlayRect(const QRectF &rect) noexcept
