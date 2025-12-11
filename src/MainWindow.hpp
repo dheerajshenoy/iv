@@ -17,7 +17,7 @@
 #include <qevent.h>
 
 #define __IV_VERSION "0.2.0"
-#define CONFIG_DIR QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + QDir::separator() + "iv"
+#define CONFIG_DIR QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + QDir::separator() + "iv" + QDir::separator()
 
 class ImageView;
 
