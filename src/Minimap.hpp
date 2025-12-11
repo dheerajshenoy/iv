@@ -31,14 +31,11 @@ public:
 
     void setPixmap(const QPixmap &pix) noexcept
     {
-        qreal dpr = devicePixelRatioF();
-        QPixmap scaled_pix = pix;
-        if (pix.devicePixelRatioF() != dpr)
-        {
-            scaled_pix.setDevicePixelRatio(dpr);
-        }
-        m_pix_item->setPixmap(scaled_pix);
-        m_scene->setSceneRect(QRectF(QPointF(0, 0), scaled_pix.size() / dpr));
+        m_pix_item->setPixmap(pix);
+
+        // Mirror the main view’s scene rect — don’t create your own
+        m_scene->setSceneRect(m_pix_item->sceneBoundingRect());
+
         fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
     }
 
@@ -76,7 +73,9 @@ public:
 
     inline void setOverlayRectBorderColor(const QColor &color) noexcept
     {
-        m_overlay_rect->setPen(color);
+        QPen p = m_overlay_rect->pen();
+        p.setColor(color);
+        m_overlay_rect->setPen(p);
     }
 
 private:
