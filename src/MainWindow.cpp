@@ -519,8 +519,30 @@ MainWindow::initConfig() noexcept
             m_config.ui.minimap_size[1] = minimap_size["height"].value_or(100);
         }
 
-        m_config.ui.minimap_image_opacity        = ui["minimap_image_opacity"].value_or(0.7f);
-        m_config.ui.minimap_position             = ui["minimap_position"].value_or("bottom-right");
+        m_config.ui.minimap_image_opacity = ui["minimap_image_opacity"].value_or(0.7f);
+        QString minimap_location          = ui["minimap_location"].value_or("bottom-right");
+
+        Minimap::Location loc;
+        if (minimap_location == "top-left")
+            loc = Minimap::Location::TOP_LEFT;
+        else if (minimap_location == "top-center")
+            loc = Minimap::Location::TOP_CENTER;
+        else if (minimap_location == "top-right")
+            loc = Minimap::Location::TOP_RIGHT;
+        else if (minimap_location == "bottom-left")
+            loc = Minimap::Location::BOTTOM_LEFT;
+        else if (minimap_location == "bottom-center")
+            loc = Minimap::Location::BOTTOM_CENTER;
+        else if (minimap_location == "center")
+            loc = Minimap::Location::CENTER;
+        else if (minimap_location == "center-left")
+            loc = Minimap::Location::CENTER_LEFT;
+        else if (minimap_location == "center-right")
+            loc = Minimap::Location::CENTER_RIGHT;
+        else
+            loc = Minimap::Location::BOTTOM_RIGHT;
+
+        m_config.ui.minimap_location             = loc;
         m_config.ui.minimap_overlay_color        = ui["minimap_overlay_color"].value_or("#55FF0000");
         m_config.ui.minimap_overlay_border_color = ui["minimap_overlay_border"].value_or("#5500FF00");
         m_config.ui.minimap_overlay_border_width = ui["minimap_overlay_border_width"].value_or(0);

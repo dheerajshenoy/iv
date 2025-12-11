@@ -3,6 +3,8 @@
 #include <QMap>
 #include <QString>
 
+#include "Minimap.hpp"
+
 struct Config
 {
 
@@ -13,7 +15,7 @@ struct Config
         bool minimap_image{true};
         int minimap_size[2]{100, 100};
         float minimap_image_opacity{0.7f};
-        QString minimap_position{"bottom-right"};
+        Minimap::Location minimap_location{Minimap::Location::BOTTOM_RIGHT};
 
         QString minimap_overlay_color{"#55FF0000"};
         QString minimap_overlay_border_color{"#5500FF00"};

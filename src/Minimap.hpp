@@ -27,6 +27,19 @@ public:
         setFixedSize(200, 200);
     }
 
+    enum class Location
+    {
+        TOP_LEFT = 0,
+        TOP_CENTER,
+        TOP_RIGHT,
+        BOTTOM_LEFT,
+        BOTTOM_CENTER,
+        BOTTOM_RIGHT,
+        CENTER_LEFT,
+        CENTER,
+        CENTER_RIGHT
+    };
+
     void showOverlayOnly(bool enabled) noexcept
     {
         m_pix_item->setVisible(!enabled);
@@ -92,6 +105,16 @@ public:
         fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
     }
 
+    inline void setLocation(Location loc) noexcept
+    {
+        m_location = loc;
+    }
+
+    inline Location location() noexcept
+    {
+        return m_location;
+    }
+
 protected:
     void resizeEvent(QResizeEvent *event) override
     {
@@ -106,4 +129,5 @@ private:
     QGraphicsPixmapItem *m_pix_item{new QGraphicsPixmapItem()};
     QGraphicsScene *m_scene{new QGraphicsScene(this)};
     QGraphicsRectItem *m_overlay_rect{new QGraphicsRectItem()};
+    Location m_location{Location::BOTTOM_RIGHT};
 };

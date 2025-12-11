@@ -36,6 +36,7 @@ ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m
     m_gview->setContentsMargins(0, 0, 0, 0);
 
     m_minimap = new Minimap(m_gview);
+    m_minimap->setLocation(m_config.ui.minimap_location);
     m_minimap->setMinimapSize(m_config.ui.minimap_size[0], m_config.ui.minimap_size[1]);
     m_minimap->setPixmapOpacity(m_config.ui.minimap_image_opacity);
     m_minimap->setOverlayRectColor(QColor::fromString(m_config.ui.minimap_overlay_color));
@@ -513,8 +514,48 @@ ImageView::updateMinimapRegion() noexcept
 void
 ImageView::updateMinimapPosition() noexcept
 {
-    m_minimap->move(m_gview->viewport()->width() - m_minimap->width() - 30,
-                    m_gview->viewport()->height() - m_minimap->height() - 30);
+    switch (m_minimap->location())
+    {
+
+        case Minimap::Location::BOTTOM_RIGHT:
+            m_minimap->move(m_gview->viewport()->width() - m_minimap->width() - 30,
+                            m_gview->viewport()->height() - m_minimap->height() - 30);
+            break;
+        case Minimap::Location::TOP_LEFT:
+            m_minimap->move(30, 30);
+            break;
+
+        case Minimap::Location::TOP_RIGHT:
+            m_minimap->move(m_gview->viewport()->width() - m_minimap->width() - 30, 30);
+            break;
+
+        case Minimap::Location::BOTTOM_LEFT:
+            m_minimap->move(30, m_gview->viewport()->height() - m_minimap->height() - 30);
+            break;
+
+        case Minimap::Location::TOP_CENTER:
+            m_minimap->move((m_gview->viewport()->width() - m_minimap->width()) / 2, 30);
+            break;
+
+        case Minimap::Location::BOTTOM_CENTER:
+            m_minimap->move((m_gview->viewport()->width() - m_minimap->width()) / 2,
+                            m_gview->viewport()->height() - m_minimap->height() - 30);
+            break;
+
+        case Minimap::Location::CENTER_LEFT:
+            m_minimap->move(30, (m_gview->viewport()->height() - m_minimap->height()) / 2);
+            break;
+
+        case Minimap::Location::CENTER:
+            m_minimap->move((m_gview->viewport()->width() - m_minimap->width()) / 2,
+                            (m_gview->viewport()->height() - m_minimap->height()) / 2);
+            break;
+
+        case Minimap::Location::CENTER_RIGHT:
+            m_minimap->move(m_gview->viewport()->width() - m_minimap->width() - 30,
+                            (m_gview->viewport()->height() - m_minimap->height()) / 2);
+            break;
+    }
 }
 
 void
@@ -574,9 +615,10 @@ ImageView::loadImage(const QImage &img) noexcept
     if (!m_config.ui.minimap_image)
         m_minimap->showOverlayOnly(true);
 
-    int margin    = 50;
-    QRectF padded = m_pix_item->boundingRect().adjusted(-margin, -margin, margin, margin);
-    m_gview->setSceneRect(padded);
+    // int margin    = 50;
+    // TODO: consider padding ?
+    // QRectF padded = m_pix_item->boundingRect().adjusted(-margin, -margin, margin, margin);
+    m_gview->setSceneRect(m_pix_item->boundingRect());
 }
 
 void
@@ -755,5 +797,4 @@ ImageView::UpdateConfig(const Config &config) noexcept
         connect(m_vscrollbar, &QScrollBar::valueChanged, this, [&](int /*value */) { updateMinimapRegion(); });
         connect(m_gview, &GraphicsView::openFilesRequested, this, &ImageView::openFilesRequested);
     }
-
 }
