@@ -11,7 +11,7 @@ struct Config
         bool minimap_shown{true};
         bool minimap_auto_hide{true};
         bool minimap_image{true};
-        float minimap_scale{0.2f};
+        int minimap_size[2]{100, 100};
         float minimap_image_opacity{0.7f};
         QString minimap_position{"bottom-right"};
 

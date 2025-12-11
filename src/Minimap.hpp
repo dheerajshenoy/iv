@@ -15,18 +15,16 @@ public:
     Minimap(QGraphicsView *parent = nullptr) : QGraphicsView(parent)
     {
         setScene(m_scene);
-        setFixedSize(200, 200);
         setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        // scale(0.5, 0.5);
         m_overlay_rect->setPen(QPen(QColor(255, 0, 0, 100), 5));
         m_overlay_rect->setBrush(QBrush(QColor(255, 0, 0, 75)));
         setFrameShadow(QGraphicsView::Plain);
         setFrameShape(QGraphicsView::NoFrame);
         m_overlay_rect->setZValue(10);
-
         m_scene->addItem(m_pix_item);
         m_scene->addItem(m_overlay_rect);
+        setFixedSize(200, 200);
     }
 
     void showOverlayOnly(bool enabled) noexcept
@@ -85,6 +83,22 @@ public:
         QPen p = m_overlay_rect->pen();
         p.setColor(color);
         m_overlay_rect->setPen(p);
+    }
+
+    void setMinimapSize(int w, int h)
+    {
+        setMinimumSize(1, 1); // allow any size
+        resize(w, h);         // apply user-requested size
+        fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
+    }
+
+protected:
+    void resizeEvent(QResizeEvent *event) override
+    {
+        QGraphicsView::resizeEvent(event);
+
+        // keep the image fitted to the new widget size
+        fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
     }
 
 private:

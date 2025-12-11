@@ -36,6 +36,7 @@ ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m
     m_gview->setContentsMargins(0, 0, 0, 0);
 
     m_minimap = new Minimap(m_gview);
+    m_minimap->setMinimapSize(m_config.ui.minimap_size[0], m_config.ui.minimap_size[1]);
     m_minimap->setPixmapOpacity(m_config.ui.minimap_image_opacity);
     m_minimap->setOverlayRectColor(QColor::fromString(m_config.ui.minimap_overlay_color));
     m_minimap->setOverlayRectBorderWidth(m_config.ui.minimap_overlay_border_width);

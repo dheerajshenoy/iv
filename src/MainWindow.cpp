@@ -502,16 +502,23 @@ MainWindow::initConfig() noexcept
         m_config.ui.tabs_shown    = ui["tabs_shown"].value_or(true);
         m_config.ui.tabs_autohide = ui["tabs_auto_hide"].value_or(true);
 
-        m_config.ui.menubar_shown                = ui["menubar_shown"].value_or(true);
-        m_config.ui.statusbar_shown              = ui["statusbar_shown"].value_or(true);
-        m_config.ui.hscrollbar_shown             = ui["hscrollbar_shown"].value_or(true);
-        m_config.ui.hscrollbar_auto_hide         = ui["hscrollbar_auto_hide"].value_or(true);
-        m_config.ui.vscrollbar_shown             = ui["vscrollbar_shown"].value_or(true);
-        m_config.ui.vscrollbar_auto_hide         = ui["vscrollbar_auto_hide"].value_or(true);
-        m_config.ui.minimap_shown                = ui["minimap_shown"].value_or(false);
-        m_config.ui.minimap_auto_hide            = ui["minimap_auto_hide"].value_or(true);
-        m_config.ui.minimap_image                = ui["minimap_image"].value_or(true);
-        m_config.ui.minimap_scale                = ui["minimap_scale"].value_or(0.2f);
+        m_config.ui.menubar_shown        = ui["menubar_shown"].value_or(true);
+        m_config.ui.statusbar_shown      = ui["statusbar_shown"].value_or(true);
+        m_config.ui.hscrollbar_shown     = ui["hscrollbar_shown"].value_or(true);
+        m_config.ui.hscrollbar_auto_hide = ui["hscrollbar_auto_hide"].value_or(true);
+        m_config.ui.vscrollbar_shown     = ui["vscrollbar_shown"].value_or(true);
+        m_config.ui.vscrollbar_auto_hide = ui["vscrollbar_auto_hide"].value_or(true);
+        m_config.ui.minimap_shown        = ui["minimap_shown"].value_or(false);
+        m_config.ui.minimap_auto_hide    = ui["minimap_auto_hide"].value_or(true);
+
+        // minimap_size = { width = 100, height = 100 } # Width, Height in pixels
+        if (ui["minimap_size"])
+        {
+            auto minimap_size           = ui["minimap_size"];
+            m_config.ui.minimap_size[0] = minimap_size["width"].value_or(100);
+            m_config.ui.minimap_size[1] = minimap_size["height"].value_or(100);
+        }
+
         m_config.ui.minimap_image_opacity        = ui["minimap_image_opacity"].value_or(0.7f);
         m_config.ui.minimap_position             = ui["minimap_position"].value_or("bottom-right");
         m_config.ui.minimap_overlay_color        = ui["minimap_overlay_color"].value_or("#55FF0000");
