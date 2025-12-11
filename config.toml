@@ -1,18 +1,28 @@
-[tabs]
-shown = true
-auto_hide = true
+[ui]
+tabs_shown = true
+tabs_auto_hide = true
 
-[hscrollbar]
-shown = true
-auto_hide = true
+hscrollbar_shown = true
+hscrollbar_auto_hide = true
 
-[vscrollbar]
-shown = true
-auto_hide = true
+vscrollbar_shown = true
+vscrollbar_auto_hide = true
 
-[minimap]
-shown = true
-auto_hide = true
+minimap_shown = true
+
+minimap_overlay_color = "#44444455"
+minimap_overlay_border = "#000000"
+minimap_overlay_border_width = 10
+
+menubar_shown = true
+statusbar_shown = true
+
+[rendering]
+dpr = { "eDP-1" = 1.25, "DP-5" = 1.0, "DP-7" = 1.0 } # Device Pixel Ratio for high-DPI displays; can be a single float value or a map of display names to DPR values
+
+[behavior]
+auto_reload = true
+config_hot_reload = true
 
 [keybindings]
 open_file = "O"
@@ -35,3 +45,20 @@ flip_left = "Ctrl+H"
 flip_right = "Ctrl+L"
 flip_up = "Ctrl+K"
 flip_down = "Ctrl+J"
+reload_file = "F5"
+open_containing_folder = "Ctrl+O"
+
+tab_next = "Ctrl+Tab"
+tab_previous = "Ctrl+Shift+Tab"
+tab_1 = "Alt+1"
+tab_2 = "Alt+2"
+tab_3 = "Alt+3"
+tab_4 = "Alt+4"
+tab_5 = "Alt+5"
+tab_6 = "Alt+6"
+tab_7 = "Alt+7"
+tab_8 = "Alt+8"
+tab_9 = "Alt+9"
+tab_last = "Alt+0"
+
+
