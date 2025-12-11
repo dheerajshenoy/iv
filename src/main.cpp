@@ -9,8 +9,25 @@ main(int argc, char *argv[])
     MainWindow mw;
 
     argparse::ArgumentParser program("iv", __IV_VERSION);
-    program.add_argument("files").remaining().metavar("FILE_PATH(s)");
-    program.add_argument("version").flag().help("Show version information");
+    // program.add_argument("version").flag().help("Show version information");
+    // program.add_argument("commands").flag().help("Show list of available commands, useful for assigning shortcuts");
+    // program.add_argument("files").remaining().metavar("FILE_PATH(s)");
+
+    // Add version, commands, and files arguments
+    program.add_argument("-v", "--version")
+        .help("Show version information")
+        .default_value(false)
+        .implicit_value(true);
+
+    program.add_argument("-c", "--commands")
+        .help("Show list of available commands, useful for assigning shortcuts")
+        .default_value(false)
+        .implicit_value(true);
+
+    program.add_argument("files")
+        .help("File path(s) to open")
+        .remaining()
+        .metavar("FILE_PATH(s)");
 
     try
     {

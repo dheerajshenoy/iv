@@ -21,11 +21,20 @@
 void
 MainWindow::readArgs(argparse::ArgumentParser &parser) noexcept
 {
-    if (parser.is_used("version"))
+    // Check if version or commands flag is used
+    if (parser.get<bool>("version"))
     {
-        qDebug() << "iv version " << __IV_VERSION;
-        qApp->exit(0);
-        return;
+        qDebug() << "Iv VERSION " << __IV_VERSION;
+        exit(0);
+    }
+
+    if (parser.get<bool>("commands"))
+    {
+        initCommandMap();
+        qInfo() << "Available commands:\n";
+        for (auto it = m_commandMap.begin(); it != m_commandMap.end(); it++)
+            qInfo() << it.key();
+        exit(0);
     }
 
     // Construct the main window
@@ -472,7 +481,7 @@ void
 MainWindow::initConfig() noexcept
 {
 
-    m_config_file_path = CONFIG_DIR + QDir::separator() + "config.toml";
+    m_config_file_path = CONFIG_DIR + "config.toml";
     toml::table toml;
 
     try
@@ -579,7 +588,7 @@ MainWindow::initConfig() noexcept
     if (m_config.behavior.save_recent_files)
     {
         if (!m_recent_file_manager)
-            m_recent_file_manager = new RecentFilesManager(CONFIG_DIR + QDir::separator() + "recent_files.json",
+            m_recent_file_manager = new RecentFilesManager(CONFIG_DIR + "recent_files.json",
                                                            m_config.behavior.recent_files_limit);
     }
 }
