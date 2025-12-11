@@ -125,6 +125,11 @@ MainWindow::initGui() noexcept
     m_toggle_minimap_action->setCheckable(true);
     m_toggle_minimap_action->setChecked(m_config.ui.minimap_shown);
 
+    m_toggle_menubar_action = m_toggle_menu->addAction(
+        QString("Menubar\t%1").arg(m_config.shortcutMap["toggle_menubar"]), this, &MainWindow::ToggleMenubar);
+    m_toggle_menubar_action->setCheckable(true);
+    m_toggle_menubar_action->setChecked(m_config.ui.menubar_shown);
+
     m_toggle_panel_action = m_toggle_menu->addAction(
         QString("Statusbar\t%1").arg(m_config.shortcutMap["toggle_statusbar"]), this, &MainWindow::ToggleStatusbar);
     m_toggle_panel_action->setCheckable(true);
@@ -169,22 +174,23 @@ MainWindow::initDefaultKeybinds() noexcept
     if (!m_default_keybindings)
         return;
 
-    m_config.shortcutMap["m"]      = "toggle_minimap";
-    m_config.shortcutMap["Ctrl+W"] = "close_file";
-    m_config.shortcutMap["o"]      = "open_file";
-    m_config.shortcutMap["q"]      = "open_file_location";
-    m_config.shortcutMap["="]      = "zoom_in";
-    m_config.shortcutMap["-"]      = "zoom_out";
-    m_config.shortcutMap[">"]      = "rotate_clock";
-    m_config.shortcutMap["<"]      = "rotate_anticlock";
-    m_config.shortcutMap["1"]      = "fit_width";
-    m_config.shortcutMap["2"]      = "fit_height";
-    m_config.shortcutMap["h"]      = "scroll_left";
-    m_config.shortcutMap["j"]      = "scroll_down";
-    m_config.shortcutMap["k"]      = "scroll_up";
-    m_config.shortcutMap["l"]      = "scroll_right";
-    m_config.shortcutMap["t"]      = "toggle_tabs";
-    m_config.shortcutMap["F11"]    = "toggle_fullscreen";
+    m_config.shortcutMap["m"]            = "toggle_minimap";
+    m_config.shortcutMap["Ctrl+Shift+M"] = "toggle_menubar";
+    m_config.shortcutMap["Ctrl+W"]       = "close_file";
+    m_config.shortcutMap["o"]            = "open_file";
+    m_config.shortcutMap["q"]            = "open_file_location";
+    m_config.shortcutMap["="]            = "zoom_in";
+    m_config.shortcutMap["-"]            = "zoom_out";
+    m_config.shortcutMap[">"]            = "rotate_clock";
+    m_config.shortcutMap["<"]            = "rotate_anticlock";
+    m_config.shortcutMap["1"]            = "fit_width";
+    m_config.shortcutMap["2"]            = "fit_height";
+    m_config.shortcutMap["h"]            = "scroll_left";
+    m_config.shortcutMap["j"]            = "scroll_down";
+    m_config.shortcutMap["k"]            = "scroll_up";
+    m_config.shortcutMap["l"]            = "scroll_right";
+    m_config.shortcutMap["t"]            = "toggle_tabs";
+    m_config.shortcutMap["F11"]          = "toggle_fullscreen";
 
     for (auto iter = m_config.shortcutMap.begin(); iter != m_config.shortcutMap.end(); iter++)
     {
@@ -362,6 +368,13 @@ MainWindow::ToggleAutoReload() noexcept
 {
     if (m_imgv)
         m_imgv->toggleAutoReload();
+}
+
+void
+MainWindow::ToggleMenubar() noexcept
+{
+    bool isVisible = menuBar()->isVisible();
+    menuBar()->setVisible(!isVisible);
 }
 
 void
@@ -605,6 +618,11 @@ MainWindow::initCommandMap() noexcept
             this->showNormal();
         else
             this->showFullScreen();
+    };
+
+    m_commandMap["toggle_menubar"] = [this]()
+    {
+        ToggleMenubar();
     };
 
     m_commandMap["open_file_location"] = [this]()

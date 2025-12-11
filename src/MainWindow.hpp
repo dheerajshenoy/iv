@@ -53,6 +53,7 @@ public:
     void Scroll(Direction dir) noexcept;
     void Flip(Direction dir) noexcept;
     void ToggleMinimap() noexcept;
+    void ToggleMenubar() noexcept;
     void PrevTab() noexcept;
     void NextTab() noexcept;
     void SwitchToTab(int index) noexcept;
@@ -113,6 +114,7 @@ private:
     QAction *m_toggle_minimap_action{nullptr};
     QAction *m_toggle_auto_reload_action{nullptr};
     QAction *m_toggle_panel_action{nullptr};
+    QAction *m_toggle_menubar_action{nullptr};
     QAction *m_file_properties_action{nullptr};
 
     TabWidget *m_tab_widget{new TabWidget()};
