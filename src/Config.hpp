@@ -31,6 +31,7 @@ struct Config
     struct Behavior
     {
         bool auto_reload{false};
+        bool config_hot_reload{true};
         bool save_recent_files{true};
         int recent_files_limit{10};
         bool auto_fit{false};

@@ -61,6 +61,8 @@ public:
         return m_auto_fit;
     }
 
+    void UpdateConfig(const Config &config) noexcept;
+
     QString fileName() noexcept;
     QString baseName() noexcept;
     inline QString filePath() noexcept

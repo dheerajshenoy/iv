@@ -7,6 +7,7 @@
 #include "argparse.hpp"
 
 #include <QApplication>
+#include <QFileSystemWatcher>
 #include <QMainWindow>
 #include <QMimeData>
 #include <QStandardPaths>
@@ -71,6 +72,7 @@ protected:
     void resizeEvent(QResizeEvent *e) override;
 
 private:
+    void initGui() noexcept;
     void initDefaultKeybinds() noexcept;
     void initCommandMap() noexcept;
     void initConfig() noexcept;
@@ -80,6 +82,8 @@ private:
     void handleTabClose(int index) noexcept;
     void updateMenuActions(bool state) noexcept;
     void handleCurrentTabChanged(int index) noexcept;
+    void onConfigFileChanged(const QString &filePath) noexcept;
+    void applyConfigChanges() noexcept;
     bool m_default_keybindings{true};
 
     QMenu *m_file_menu{nullptr};
@@ -111,7 +115,6 @@ private:
     QAction *m_toggle_panel_action{nullptr};
     QAction *m_file_properties_action{nullptr};
 
-
     TabWidget *m_tab_widget{new TabWidget()};
     Panel *m_panel{new Panel()};
     ImageView *m_imgv{nullptr};
@@ -120,4 +123,6 @@ private:
     Config m_config;
     RecentFilesManager *m_recent_file_manager{nullptr};
     QMap<QString, float> m_screen_dpr_map; // DPR per screen
+    QFileSystemWatcher *m_config_file_watcher{nullptr};
+    QString m_config_file_path;
 };

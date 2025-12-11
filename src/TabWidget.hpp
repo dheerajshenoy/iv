@@ -23,6 +23,7 @@ protected:
 
             QString logoText = "Iv";
             QString info     = "Welcome to Iv!\n\n"
+                               "Use File -> Open to open image file(s)\n\n"
                                "Drag and drop a supported image file(s) here.";
             // "Use File → Open to open a PDF file.\n"
 

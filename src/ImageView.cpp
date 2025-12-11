@@ -712,3 +712,37 @@ ImageView::getEXIF() noexcept
     return exifData;
 }
 #endif
+
+void
+ImageView::UpdateConfig(const Config &config) noexcept
+{
+    m_config = config;
+    m_minimap->setForceHidden(!m_config.ui.minimap_shown);
+    m_minimap->setOverlayRectColor(QColor::fromString(m_config.ui.minimap_overlay_color));
+    m_minimap->setOverlayRectBorderWidth(m_config.ui.minimap_overlay_border_width);
+    m_minimap->setOverlayRectBorderColor(QColor::fromString(m_config.ui.minimap_overlay_border_color));
+
+    // Disconnect old connections to avoid duplicates
+    disconnect(m_hscrollbar, &QScrollBar::valueChanged, this, nullptr);
+    disconnect(m_vscrollbar, &QScrollBar::valueChanged, this, nullptr);
+
+    if (!m_config.ui.vscrollbar_auto_hide)
+        m_gview->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+
+    if (!m_config.ui.vscrollbar_shown)
+        m_gview->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    if (!m_config.ui.hscrollbar_auto_hide)
+        m_gview->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+
+    if (!m_config.ui.hscrollbar_shown)
+        m_gview->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    if (m_config.ui.minimap_shown)
+    {
+        connect(m_hscrollbar, &QScrollBar::valueChanged, this, [&](int /*value */) { updateMinimapRegion(); });
+        connect(m_vscrollbar, &QScrollBar::valueChanged, this, [&](int /*value */) { updateMinimapRegion(); });
+        connect(m_gview, &GraphicsView::openFilesRequested, this, &ImageView::openFilesRequested);
+    }
+    qDebug() << "ImageView UPDATED";
+}

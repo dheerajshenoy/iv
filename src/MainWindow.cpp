@@ -13,6 +13,7 @@
 #include <QScreen>
 #include <QShortcut>
 #include <QTabBar>
+#include <QTimer>
 #include <QWindow>
 #include <qnamespace.h>
 #include <qshortcut.h>
@@ -48,22 +49,28 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 void
 MainWindow::construct() noexcept
 {
+    initCommandMap();
+    initConfig();
+    initConnections();
+
+    m_file_menu = menuBar()->addMenu("&File");
+    m_view_menu = menuBar()->addMenu("&View");
+    m_edit_menu = menuBar()->addMenu("&Edit");
+    m_help_menu = menuBar()->addMenu("&Help");
+
+    initGui();
+}
+
+void
+MainWindow::initGui() noexcept
+{
+
     QVBoxLayout *layout = new QVBoxLayout();
     layout->addWidget(m_tab_widget);
     layout->addWidget(m_panel);
     QWidget *widget = new QWidget();
     widget->setLayout(layout);
     setCentralWidget(widget);
-
-    initCommandMap();
-    initConfig();
-    initConnections();
-    show();
-
-    m_file_menu = menuBar()->addMenu("&File");
-    m_view_menu = menuBar()->addMenu("&View");
-    m_edit_menu = menuBar()->addMenu("&Edit");
-    m_help_menu = menuBar()->addMenu("&Help");
 
     m_open_file_action = m_file_menu->addAction(QString("Open File\t%1").arg(m_config.shortcutMap["open_file"]), this,
                                                 &MainWindow::openFileDialog);
@@ -149,6 +156,11 @@ MainWindow::construct() noexcept
     m_tab_widget->setDocumentMode(true);
     m_tab_widget->tabBar()->setVisible(m_config.ui.tabs_shown);
     m_tab_widget->setTabBarAutoHide(m_config.ui.tabs_autohide);
+
+    menuBar()->setVisible(m_config.ui.menubar_shown);
+    m_panel->setVisible(m_config.ui.statusbar_shown);
+
+    this->show();
 }
 
 void
@@ -184,7 +196,6 @@ MainWindow::initDefaultKeybinds() noexcept
 void
 MainWindow::initConnections() noexcept
 {
-
     QList<QScreen *> outputs = QGuiApplication::screens();
     connect(m_tab_widget, &QTabWidget::currentChanged, this, &MainWindow::handleCurrentTabChanged);
 
@@ -448,13 +459,12 @@ void
 MainWindow::initConfig() noexcept
 {
 
-    const QString config_file = CONFIG_DIR + QDir::separator() + "config.toml";
-
+    m_config_file_path = CONFIG_DIR + QDir::separator() + "config.toml";
     toml::table toml;
 
     try
     {
-        toml = toml::parse_file(config_file.toStdString());
+        toml = toml::parse_file(m_config_file_path.toStdString());
     }
     catch (const toml::parse_error &e)
     {
@@ -491,6 +501,17 @@ MainWindow::initConfig() noexcept
         m_config.behavior.save_recent_files  = behavior["save_recent_files"].value_or(true);
         m_config.behavior.recent_files_limit = behavior["recent_files_limit"].value_or(10);
         m_config.behavior.auto_fit           = behavior["auto_fit"].value_or(false);
+        m_config.behavior.config_hot_reload  = behavior["config_hot_reload"].value_or(true);
+    }
+
+    if (m_config.behavior.config_hot_reload)
+    {
+        if (!m_config_file_watcher)
+        {
+            m_config_file_watcher = new QFileSystemWatcher(this);
+            m_config_file_watcher->addPath(m_config_file_path);
+            connect(m_config_file_watcher, &QFileSystemWatcher::fileChanged, this, &MainWindow::onConfigFileChanged);
+        }
     }
 
     auto rendering = toml["rendering"];
@@ -544,8 +565,9 @@ MainWindow::initConfig() noexcept
 
     if (m_config.behavior.save_recent_files)
     {
-        m_recent_file_manager = new RecentFilesManager(CONFIG_DIR + QDir::separator() + "recent_files.json",
-                                                       m_config.behavior.recent_files_limit);
+        if (!m_recent_file_manager)
+            m_recent_file_manager = new RecentFilesManager(CONFIG_DIR + QDir::separator() + "recent_files.json",
+                                                           m_config.behavior.recent_files_limit);
     }
 }
 
@@ -841,4 +863,83 @@ MainWindow::ShowFileProperties() noexcept
     QMessageBox::warning(this, "EXIF Data Unavailable",
                          "EXIF data extraction is not available. iv was built without Exiv2 support.");
 #endif
+}
+
+void
+MainWindow::onConfigFileChanged(const QString &path) noexcept
+{
+    qDebug() << "Config file changed:" << path;
+
+    // Stop watching temporarily to avoid duplicate signals
+    m_config_file_watcher->removePath(path);
+
+    // Use a single-shot timer to debounce rapid changes
+    // and wait for file to be ready after replacement
+    QTimer::singleShot(100, this, [this, path]()
+    {
+        if (!QFile::exists(path))
+        {
+            qWarning() << "Config file does not exist after change:" << path;
+            // Try to re-add watch anyway in case it comes back
+            m_config_file_watcher->addPath(path);
+            return;
+        }
+
+        // Verify file is readable before reloading
+        QFile file(path);
+        if (!file.open(QIODevice::ReadOnly))
+        {
+            qWarning() << "Config file exists but cannot be opened:" << path;
+            m_config_file_watcher->addPath(path);
+            return;
+        }
+        file.close();
+
+        // File is ready - reload configuration
+        qDebug() << "Config reloaded!";
+        initConfig();
+        applyConfigChanges();
+
+        // Re-add the watch
+        m_config_file_watcher->addPath(path);
+    });
+}
+
+void
+MainWindow::applyConfigChanges() noexcept
+{
+    m_open_file_action->setShortcut(m_config.shortcutMap["open_file"]);
+    m_open_containing_folder_action->setShortcut(m_config.shortcutMap["open_containing_folder"]);
+    m_file_properties_action->setShortcut(m_config.shortcutMap["file_properties"]);
+    m_close_file_action->setShortcut(m_config.shortcutMap["close_file"]);
+    m_exit_action->setShortcut(m_config.shortcutMap["exit"]);
+    m_zoom_in_action->setShortcut(m_config.shortcutMap["zoom_in"]);
+    m_zoom_out_action->setShortcut(m_config.shortcutMap["zoom_out"]);
+    m_rotate_clock_action->setShortcut(m_config.shortcutMap["rotate_clock"]);
+    m_rotate_anticlock_action->setShortcut(m_config.shortcutMap["rotate_anticlock"]);
+    m_fit_width_action->setShortcut(m_config.shortcutMap["fit_width"]);
+    m_fit_height_action->setShortcut(m_config.shortcutMap["fit_height"]);
+    m_fit_window_action->setShortcut(m_config.shortcutMap["fit_window"]);
+    m_auto_fit_action->setShortcut(m_config.shortcutMap["auto_fit"]);
+    m_auto_fit_action->setChecked(m_config.behavior.auto_fit);
+    m_toggle_minimap_action->setShortcut(m_config.shortcutMap["toggle_minimap"]);
+    m_toggle_minimap_action->setChecked(m_config.ui.minimap_shown);
+    m_toggle_panel_action->setShortcut(m_config.shortcutMap["toggle_statusbar"]);
+    m_toggle_panel_action->setChecked(m_config.ui.statusbar_shown);
+    m_toggle_auto_reload_action->setShortcut(m_config.shortcutMap["auto_reload"]);
+    m_toggle_auto_reload_action->setChecked(m_config.behavior.auto_reload);
+
+    m_tab_widget->tabBar()->setVisible(m_config.ui.tabs_shown);
+    m_tab_widget->setTabBarAutoHide(m_config.ui.tabs_autohide);
+    menuBar()->setVisible(m_config.ui.menubar_shown);
+    m_panel->setVisible(m_config.ui.statusbar_shown);
+
+    for (int i = 0; i < m_tab_widget->count(); i++)
+    {
+        auto temp = qobject_cast<ImageView *>(m_tab_widget->widget(i));
+        if (temp)
+        {
+            temp->UpdateConfig(m_config);
+        }
+    }
 }
