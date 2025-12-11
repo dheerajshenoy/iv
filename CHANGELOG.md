@@ -7,3 +7,10 @@
 - Pinch to zoom support
 - Auto fit feature
 - Auto reload images when they change on disk feature
+- Fix minimap region preview bug
+- Add touchpad gestures
+- Minimap config options
+    - Toggle minimap image preview
+    - location
+    - size
+    - opacity

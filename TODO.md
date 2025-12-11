@@ -1,2 +1,2 @@
 - [X] Add touchpad gestures
-- [ ] Fix minimap region preview bug
+- [X] Fix minimap region preview bug
