@@ -249,6 +249,24 @@ ImageView::render() noexcept
         QMessageBox::critical(this, "Error missing delegate: ", e.what());
         return false;
     }
+    catch (const Magick::Exception &e)
+    {
+        qDebug() << "Magick++ exception: " << e.what();
+        QMessageBox::critical(this, "Magick++ exception: ", e.what());
+        return false;
+    }
+    catch (const std::exception &e)
+    {
+        qDebug() << "Standard exception: " << e.what();
+        QMessageBox::critical(this, "Standard exception: ", e.what());
+        return false;
+    }
+    catch (...)
+    {
+        qDebug() << "Unknown error occurred while opening image.";
+        QMessageBox::critical(this, "Unknown error", "An unknown error occurred while opening the image.");
+        return false;
+    }
 
     if (hasMoreThanOneFrame())
         renderAnimatedImage();
