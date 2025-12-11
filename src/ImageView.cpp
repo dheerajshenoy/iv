@@ -798,3 +798,27 @@ ImageView::UpdateConfig(const Config &config) noexcept
         connect(m_gview, &GraphicsView::openFilesRequested, this, &ImageView::openFilesRequested);
     }
 }
+
+void
+ImageView::scrollToLeftEdge() noexcept
+{
+    m_hscrollbar->setValue(m_hscrollbar->minimum());
+}
+
+void
+ImageView::scrollToRightEdge() noexcept
+{
+    m_hscrollbar->setValue(m_hscrollbar->maximum());
+}
+
+void
+ImageView::scrollToTopEdge() noexcept
+{
+    m_vscrollbar->setValue(m_vscrollbar->minimum());
+}
+
+void
+ImageView::scrollToBottomEdge() noexcept
+{
+    m_vscrollbar->setValue(m_vscrollbar->maximum());
+}

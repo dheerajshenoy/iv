@@ -638,6 +638,27 @@ MainWindow::initCommandMap() noexcept
             m_imgv->reloadFile();
         }
     };
+
+    m_commandMap["left_edge"] = [this]()
+    {
+        m_imgv->scrollToLeftEdge();
+    };
+
+    m_commandMap["right_edge"] = [this]()
+    {
+        m_imgv->scrollToRightEdge();
+    };
+
+    m_commandMap["top_edge"] = [this]()
+    {
+        m_imgv->scrollToTopEdge();
+    };
+
+    m_commandMap["bottom_edge"] = [this]()
+    {
+        m_imgv->scrollToBottomEdge();
+    };
+
     m_commandMap["open_file"] = [this]()
     {
         OpenFile();

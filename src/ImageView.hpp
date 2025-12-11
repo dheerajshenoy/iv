@@ -36,6 +36,10 @@ public:
     };
 
     QSize size() noexcept;
+    void scrollToLeftEdge() noexcept;
+    void scrollToRightEdge() noexcept;
+    void scrollToTopEdge() noexcept;
+    void scrollToBottomEdge() noexcept;
     void zoomIn() noexcept;
     void zoomOut() noexcept;
     void rotateClock() noexcept;
