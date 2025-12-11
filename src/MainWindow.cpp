@@ -509,7 +509,11 @@ MainWindow::initConfig() noexcept
         m_config.ui.vscrollbar_shown             = ui["vscrollbar_shown"].value_or(true);
         m_config.ui.vscrollbar_auto_hide         = ui["vscrollbar_auto_hide"].value_or(true);
         m_config.ui.minimap_shown                = ui["minimap_shown"].value_or(false);
-        m_config.ui.auto_hide_minimap            = ui["minimap_auto_hide"].value_or(true);
+        m_config.ui.minimap_auto_hide            = ui["minimap_auto_hide"].value_or(true);
+        m_config.ui.minimap_image                = ui["minimap_image"].value_or(true);
+        m_config.ui.minimap_scale                = ui["minimap_scale"].value_or(0.2f);
+        m_config.ui.minimap_image_opacity        = ui["minimap_image_opacity"].value_or(0.7f);
+        m_config.ui.minimap_position             = ui["minimap_position"].value_or("bottom-right");
         m_config.ui.minimap_overlay_color        = ui["minimap_overlay_color"].value_or("#55FF0000");
         m_config.ui.minimap_overlay_border_color = ui["minimap_overlay_border"].value_or("#5500FF00");
         m_config.ui.minimap_overlay_border_width = ui["minimap_overlay_border_width"].value_or(0);
@@ -588,8 +592,8 @@ MainWindow::initConfig() noexcept
     if (m_config.behavior.save_recent_files)
     {
         if (!m_recent_file_manager)
-            m_recent_file_manager = new RecentFilesManager(CONFIG_DIR + "recent_files.json",
-                                                           m_config.behavior.recent_files_limit);
+            m_recent_file_manager =
+                new RecentFilesManager(CONFIG_DIR + "recent_files.json", m_config.behavior.recent_files_limit);
     }
 }
 
