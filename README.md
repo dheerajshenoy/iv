@@ -20,7 +20,8 @@
 
 [Look here](https://imagemagick.org/script/formats.php#supported)
 
-+ AVIF support [OPTIONAL]
++ AVIF support \[OPTIONAL\](Enabled if `libavif` is found during compilation)
++ EXIF metadata viewing \[OPTIONAL\](Enabled if `libexiv2` is found during compilation)
 
 ## Installation
 
@@ -30,10 +31,12 @@
     - ImageMagick
     - cmake & ninja (for building)
     - libavif [OPTIONAL] (for avif image support)
+    - libexiv2 [OPTIONAL] (for EXIF metadata support)
 
 > [!NOTE]
 > libavif is most probably installed on most systems already.
 > If found during compilation, AVIF support will automatically be enabled.
+> Similarly, if libexiv2 is found, EXIF metadata support will be enabled.
 
 2. Run the following commands to clone the repo and build iv
 
