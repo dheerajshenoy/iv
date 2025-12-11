@@ -24,7 +24,6 @@ public:
         m_overlay_rect->setZValue(10);
         m_scene->addItem(m_pix_item);
         m_scene->addItem(m_overlay_rect);
-        setFixedSize(200, 200);
     }
 
     enum class Location
@@ -43,14 +42,14 @@ public:
     void showOverlayOnly(bool enabled) noexcept
     {
         m_pix_item->setVisible(!enabled);
-        m_scene->setSceneRect(m_pix_item->sceneBoundingRect());
+        m_scene->setSceneRect(m_pix_item->boundingRect());
         fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
     }
 
     void setPixmap(const QPixmap &pix) noexcept
     {
         m_pix_item->setPixmap(pix);
-        m_scene->setSceneRect(m_pix_item->sceneBoundingRect());
+        m_scene->setSceneRect(m_pix_item->boundingRect());
         fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
     }
 
