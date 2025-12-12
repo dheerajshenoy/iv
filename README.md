@@ -5,8 +5,10 @@
 > This project is still in early development. Expect bugs and missing features.
 > Current alpha version: 0.2.0
 
-![iv-demo](images/iv.png)
-![minimap](images/minimap-demo.gif)
+
+<img src="images/iv-home.png" alt="iv-no-files" width="600"/>
+<img src="images/iv.png" alt="iv-image-demo" width="600"/>
+<img src="images/minimap-demo.gif" alt="minimap-demo" width="600"/>
 
 # Features
 
