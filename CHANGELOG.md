@@ -18,3 +18,6 @@
 - Fix minimap rotation Bug
 - Fix zoom minimap Bug
 - Minimap overlay move to move viewport
+- Add `--not-tabbed` option
+- Add `--config` option
+- Add `--commands` option

@@ -8,6 +8,7 @@
 # Features
 
 + Tabbed interface to open multiple images in one window
++ Auto reload images when they change on disk (optional)
 + Minimap to preview the entire image and navigate easily (with click to move support)
 + Support for animated images
 + View EXIF metadata \[OPTIONAL\](Enabled if `libexiv2` is found during compilation)
@@ -23,7 +24,7 @@
 + All the well-known image formats.
 + Includes support for animated images.
 
-[Look here](https://imagemagick.org/script/formats.php#supported)
+[Supported Image Formats](https://imagemagick.org/script/formats.php#supported)
 
 + AVIF support \[OPTIONAL\](Enabled if `libavif` is found during compilation)
 + EXIF metadata viewing \[OPTIONAL\](Enabled if `libexiv2` is found during compilation)
@@ -69,10 +70,11 @@ iv [options] [files...]
 ```
 Options:
 ```
-  -h, --help            Show this help message and exit
-  -v, --version         Show application version and exit
-  -c, --config          Use the specified configuration (TOML) file
-  --commands        Show list of available commands and exit
+-h, --help            Show this help message and exit
+-v, --version         Show application version and exit
+-c, --config          Use the specified configuration (TOML) file
+--commands            Show list of available commands and exit
+--not-tabbed          Open images in separate windows instead of tabs
 ```
 
 ## Configuration

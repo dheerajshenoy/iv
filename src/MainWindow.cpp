@@ -22,13 +22,13 @@ void
 MainWindow::readArgs(argparse::ArgumentParser &parser) noexcept
 {
     // Check if version or commands flag is used
-    if (parser.get<bool>("version"))
+    if (parser.is_used("version"))
     {
         qDebug() << "Iv VERSION " << __IV_VERSION;
         exit(0);
     }
 
-    if (parser.get<bool>("commands"))
+    if (parser.is_used("commands"))
     {
         initCommandMap();
         qInfo() << "Available commands:\n";
@@ -39,21 +39,25 @@ MainWindow::readArgs(argparse::ArgumentParser &parser) noexcept
 
     if (parser.is_used("config"))
     {
-        QString configPath = parser.get<QString>("config");
+        const QString configPath = QString::fromStdString(parser.get<std::string>("config"));
         if (!configPath.isEmpty())
-        {
             m_config_file_path = configPath;
-        }
     }
 
-    // Construct the main window
-    this->construct();
-    updateMenuActions(false);
+    if (parser.is_used("not-tabbed"))
+        m_not_tabbed = true;
 
     if (parser.is_used("files"))
     {
         auto files = parser.get<std::vector<std::string>>("files");
-        OpenFiles(files);
+        if (m_not_tabbed)
+            OpenFiles(files);
+        else
+        {
+            // Construct the main window
+            this->construct();
+            OpenFiles(files);
+        }
     }
 }
 
@@ -183,6 +187,7 @@ MainWindow::initGui() noexcept
     menuBar()->setVisible(m_config.ui.menubar_shown);
     m_panel->setVisible(m_config.ui.statusbar_shown);
 
+    updateMenuActions(false);
     this->show();
 }
 
@@ -277,8 +282,23 @@ MainWindow::OpenFiles(const std::vector<std::string> &files) noexcept
 }
 
 void
+MainWindow::OpenFileInNewWindow(const QString &filepath) noexcept
+{
+    MainWindow *win = new MainWindow();
+    win->construct();
+    // win->show();
+    win->OpenFile(filepath);
+}
+
+void
 MainWindow::OpenFile(const QString &filepath) noexcept
 {
+    if (m_not_tabbed)
+    {
+        OpenFileInNewWindow(filepath);
+        return;
+    }
+
     QString fp = filepath;
 
     if (fp.isEmpty())
@@ -312,9 +332,7 @@ MainWindow::OpenFile(const QString &filepath) noexcept
     }
     else
     {
-
         updateMenuActions(true);
-
         m_recent_file_manager->addFilePath(filepath);
 
         if (m_config.behavior.auto_reload)
@@ -322,6 +340,7 @@ MainWindow::OpenFile(const QString &filepath) noexcept
 
         m_tab_widget->addTab(m_imgv, fp);
         m_tab_widget->setCurrentWidget(m_imgv); // Make it the active tab
+
         connect(m_imgv, &ImageView::openFilesRequested, this,
                 [&](const QStringList &files) { OpenFiles(files); }); // drop event
     }

@@ -14,24 +14,23 @@ main(int argc, char *argv[])
     // program.add_argument("files").remaining().metavar("FILE_PATH(s)");
 
     // Add version, commands, and files arguments
-    program.add_argument("-v", "--version")
-        .help("Show version information")
-        .default_value(false)
-        .implicit_value(true);
+    program.add_argument("-v", "--version").help("Show version information").default_value(false).implicit_value(true);
 
     program.add_argument("--commands")
-        .help("Show list of available commands, useful for assigning shortcuts")
-        .default_value(false)
-        .implicit_value(true);
+        .flag()
+        .help("Show list of available commands, useful for assigning shortcuts");
 
     program.add_argument("-c", "--config")
         .help("Path to configuration file")
-        .default_value(QString());
+        .default_value(std::string())
+        .nargs(1)
+        .metavar("CONFIG_PATH");
 
-    program.add_argument("files")
-        .help("File path(s) to open")
-        .remaining()
-        .metavar("FILE_PATH(s)");
+    program.add_argument("--not-tabbed")
+        .flag()
+        .help("Open files in separate windows instead of tabs");
+
+    program.add_argument("files").help("File path(s) to open").remaining().metavar("FILE_PATH(s)");
 
     try
     {

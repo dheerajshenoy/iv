@@ -61,6 +61,7 @@ public:
     void ToggleAutoReload() noexcept;
     void ToggleAutoFit() noexcept;
     void ShowFileProperties() noexcept;
+    void OpenFileInNewWindow(const QString &filepath) noexcept;
 
     inline void ToggleStatusbar() const noexcept
     {
@@ -85,7 +86,7 @@ private:
     void handleCurrentTabChanged(int index) noexcept;
     void onConfigFileChanged(const QString &filePath) noexcept;
     void applyConfigChanges() noexcept;
-    bool m_default_keybindings{true};
+    bool m_default_keybindings{true}, m_not_tabbed{false};
 
     QMenu *m_file_menu{nullptr};
     QMenu *m_view_menu{nullptr};
