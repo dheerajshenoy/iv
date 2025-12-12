@@ -293,9 +293,10 @@ ImageView::zoomOut() noexcept
 void
 ImageView::rotateClock() noexcept
 {
-    m_rotation = (m_rotation + 90) % 360;
-
-    // Rotate around pixmap center
+    m_rot
+    QTransform t;
+    t.rotate(m_rotation);
+    m_pix_item->setTransform(t);
     m_pix_item->setTransformOriginPoint(m_pix_item->boundingRect().center());
     m_pix_item->setRotation(m_rotation);
 
