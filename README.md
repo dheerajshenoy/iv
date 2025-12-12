@@ -1,6 +1,10 @@
 <p align="center"><img src="resources/icons/hicolor/256x256/apps/iv.png"></p>
 <p align="center">Minimal image viewer</p>
 
+> [!WARNING]
+> This project is still in early development. Expect bugs and missing features.
+> Current alpha version: 0.2.0
+
 # Features
 
 + Tabbed interface to open multiple images in one window
