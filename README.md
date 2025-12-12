@@ -6,10 +6,10 @@
 > Current alpha version: 0.2.0
 
 
-<img src="images/iv-home.png" alt="iv-no-files" width="600"/>
-<img src="images/iv.png" alt="iv-image-demo" width="600"/>
-<img src="images/minimap-demo.gif" alt="minimap-demo" width="600"/>
+<img src="images/iv-home.png" alt="iv-no-files" width="800"/>
+<img src="images/iv.png" alt="iv-image-demo" width="800"/>
 
+<img src="images/minimap-demo.gif" alt="minimap-demo" width="800" caption="minimap">
 # Features
 
 + Tabbed interface to open multiple images in one window
