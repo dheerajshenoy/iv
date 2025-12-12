@@ -23,3 +23,4 @@
 - Add `--commands` option
 - Loading spinner for opening large/multiple images
 - Tab position config
+- Fix minimap padding bug

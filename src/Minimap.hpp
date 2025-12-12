@@ -12,6 +12,70 @@
 #include <QSize>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <qnamespace.h>
+
+// Custom pixmap item with border support
+class BorderedPixmapItem : public QGraphicsPixmapItem
+{
+public:
+    BorderedPixmapItem(QGraphicsItem *parent = nullptr) : QGraphicsPixmapItem(parent) {}
+
+    void setBorderColor(const QColor &color)
+    {
+        m_border_color = color;
+        update();
+    }
+
+    void setBorderWidth(int width)
+    {
+        m_border_width = width;
+        update();
+    }
+
+    void setBorderVisible(bool visible)
+    {
+        m_border_visible = visible;
+        update();
+    }
+
+    void setBorder(const QColor &color, int width)
+    {
+        m_border_color   = color;
+        m_border_width   = width;
+        m_border_visible = true;
+        update();
+    }
+
+protected:
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override
+    {
+        // Draw the pixmap first
+        QGraphicsPixmapItem::paint(painter, option, widget);
+
+        // Draw border on top if enabled
+        if (m_border_visible && m_border_width > 0 && !pixmap().isNull())
+        {
+            painter->save();
+            QPen pen(m_border_color, m_border_width);
+            pen.setCosmetic(true);
+            painter->setPen(pen);
+            painter->setBrush(Qt::NoBrush);
+
+            // Draw border around the pixmap bounds
+            QRectF rect     = boundingRect();
+            qreal halfWidth = m_border_width / 2.0;
+            rect.adjust(halfWidth, halfWidth, -halfWidth, -halfWidth);
+
+            painter->drawRect(rect);
+            painter->restore();
+        }
+    }
+
+private:
+    bool m_border_visible{false};
+    int m_border_width{5};
+    QColor m_border_color{Qt::black};
+};
 
 class Minimap : public QGraphicsView
 {
@@ -76,6 +140,8 @@ public:
     {
         m_pix_item->setPixmap(pix);
         m_pix_item->setPos(0, 0); // Ensure pixmap is at origin
+        m_pix_item->setBorder(m_border_color, m_border_width);
+        m_pix_item->setBorderVisible(true);
         updateSceneRect();
     }
 
@@ -118,6 +184,13 @@ public:
         return m_location;
     }
 
+    inline void setBorder(const float width, const QColor &color) noexcept
+    {
+        m_border_width = width;
+        m_border_color = color;
+        m_pix_item->setBorder(color, width);
+    }
+
 signals:
     void minimapClicked(const QPointF &pos);
 
@@ -137,7 +210,9 @@ protected:
 private:
     float m_padding{10.0f};
     bool m_force_hidden{false};
-    QGraphicsPixmapItem *m_pix_item{new QGraphicsPixmapItem()};
+    float m_border_width{1.0f};
+    BorderedPixmapItem *m_pix_item{new BorderedPixmapItem()};
+    QColor m_border_color{Qt::black};
     QGraphicsScene *m_scene{new QGraphicsScene(this)};
     Location m_location{Location::BOTTOM_RIGHT};
     QPointF m_dragStart;
@@ -146,37 +221,6 @@ private:
     {
         if (m_pix_item->pixmap().isNull())
             return;
-
-        // Get the pixmap's bounding rect in item coordinates
-        QRectF pixRect = m_pix_item->boundingRect();
-
-        // Get the scene bounding rect (accounts for rotation)
-        QRectF sceneBounds = m_pix_item->sceneBoundingRect();
-
-        // Set scene rect to EXACTLY the transformed bounds, starting at 0,0
-        m_scene->setSceneRect(sceneBounds);
-
-        // Get viewport size
-        QSizeF viewSize = viewport()->size();
-
-        // Calculate scale to fit the scene rect in viewport
-        qreal sx    = viewSize.width() / sceneBounds.width();
-        qreal sy    = viewSize.height() / sceneBounds.height();
-        qreal scale = qMin(sx, sy);
-
-        // Reset transform and apply new scale
-        resetTransform();
-        setTransform(QTransform::fromScale(scale, scale));
-
-        // Align to top-left (0,0) - no centering
-        setAlignment(Qt::AlignLeft | Qt::AlignTop);
+        fitInView(m_pix_item, Qt::KeepAspectRatio);
     }
-
-    // void updateSceneRect() noexcept
-    // {
-    //     if (!m_pix_item->pixmap().isNull())
-    //     {
-    //         m_scene->setSceneRect(m_pix_item->boundingRect());
-    //     }
-    // }
 };

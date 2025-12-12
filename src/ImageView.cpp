@@ -861,6 +861,7 @@ ImageView::UpdateFromConfig() noexcept
     m_minimap->setLocation(m_config.ui.minimap_location);
     m_minimap->setMinimapSize(m_config.ui.minimap_size);
     m_minimap->setMinimapPadding(m_config.ui.minimap_padding);
+    m_minimap->setBorder(m_config.ui.minimap_border_width, QColor::fromString(m_config.ui.minimap_border_color));
     updateMinimapPosition();
 
     m_minimap->setClickable(m_config.ui.minimap_clickable);

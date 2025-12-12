@@ -584,6 +584,8 @@ MainWindow::initConfig() noexcept
         m_config.ui.minimap_padding         = ui["minimap_padding"].value_or(10.0f);
         m_config.ui.minimap_clickable       = ui["minimap_clickable"].value_or(true);
         m_config.ui.minimap_overlay_movable = ui["minimap_overlay_movable"].value_or(true);
+        m_config.ui.minimap_border_color    = ui["minimap_border_color"].value_or("#550000FF");
+        m_config.ui.minimap_border_width    = ui["minimap_border_width"].value_or(1);
 
         if (ui["minimap_size"].is_table())
         {

@@ -20,6 +20,8 @@ struct Config
         Minimap::Location minimap_location{Minimap::Location::BOTTOM_RIGHT};
         bool minimap_overlay_movable{true};
         bool minimap_clickable{true};
+        QString minimap_border_color{"#550000FF"};
+        int minimap_border_width{1};
 
         QString minimap_overlay_color{"#55FF0000"};
         QString minimap_overlay_border_color{"#5500FF00"};
