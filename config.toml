@@ -1,6 +1,7 @@
 [ui]
 tabs_shown = true
-tabs_auto_hide = true
+tabs_auto_hide = false
+tab_bar_position  = "top" # "top", "bottom", "left", "right"
 
 hscrollbar_shown = true
 hscrollbar_auto_hide = true
@@ -8,14 +9,24 @@ hscrollbar_auto_hide = true
 vscrollbar_shown = true
 vscrollbar_auto_hide = true
 
-minimap_shown = true
-
-minimap_overlay_color = "#44444455"
-minimap_overlay_border = "#000000"
-minimap_overlay_border_width = 10
-
 menubar_shown = true
 statusbar_shown = true
+
+
+# Minimap settings
+minimap_shown = true
+minimap_auto_hide = true # Automatically hide minimap when not required
+minimap_image = true # Show image preview in minimap
+minimap_scale = 0.05 # Scale of the minimap relative to the main image
+minimap_image_opacity = 0.75
+minimap_location = "top-right" # "top-left", "top-right", "bottom-left", "bottom-right", "bottom-center", "top-center"
+minimap_overlay_movable = true # Allow clicking on the minimap overlay to navigate the main view
+minimap_clickable = true # Allow clicking on the minimap to navigate the main view
+
+# Minimap overlay settings
+minimap_overlay_color = "#44FFFFFF"
+minimap_overlay_border = "#FF5050"
+minimap_overlay_border_width = 50
 
 [rendering]
 dpr = { "eDP-1" = 1.25, "DP-5" = 1.0, "DP-7" = 1.0 } # Device Pixel Ratio for high-DPI displays; can be a single float value or a map of display names to DPR values
@@ -47,6 +58,13 @@ flip_up = "Ctrl+K"
 flip_down = "Ctrl+J"
 reload_file = "F5"
 open_containing_folder = "Ctrl+O"
+toggle_menubar = "Ctrl+Shift+M"
+
+# Go to the edges of the image
+left_edge = "Shift+H"
+right_edge = "Shift+L"
+top_edge = "Shift+K"
+bottom_edge = "Shift+J"
 
 tab_next = "Ctrl+Tab"
 tab_previous = "Ctrl+Shift+Tab"
