@@ -5,6 +5,9 @@
 > This project is still in early development. Expect bugs and missing features.
 > Current alpha version: 0.2.0
 
+![iv-demo](images/iv.gif)
+![minimap](images/minimap-demo.gif)
+
 # Features
 
 + Tabbed interface to open multiple images in one window
@@ -15,9 +18,6 @@
 + Support for AVIF images \[OPTIONAL\](Enabled if `libavif` is found during compilation)
 + Configuration using `TOML` (with auto reload support)
 
-# Demo
-
-![iv-demo](demo.gif)
 
 ## Supported Image Formats
 
