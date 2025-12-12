@@ -143,8 +143,13 @@ public:
 #endif
 
     void updateMinimapPosition() noexcept;
+
 signals:
     void openFilesRequested(const QList<QString> &files);
+
+private slots:
+    void updateGifFrame(int frameNumber = 0) noexcept;
+    void startGifPlayback() noexcept;
 
 protected:
     void showEvent(QShowEvent *e) override;
@@ -162,12 +167,15 @@ private:
 #endif
     void renderAnimatedImage() noexcept;
     QString humanReadableSize(qint64 bytes) noexcept;
-    void updateGifFrame(int frameNumber) noexcept;
-    void stopGifAnimation() noexcept;
-    void startGifAnimation() noexcept;
     bool hasMoreThanOneFrame() noexcept;
     void updateMinimapRegion() noexcept;
     QString getMimeType(const QString &filepath) noexcept;
+
+    void renderWithQMovie() noexcept;
+    void renderWithPreDecode() noexcept;
+
+    void stopGifAnimation() noexcept;
+    void startGifAnimation() noexcept;
 
     void onFileReloadRequested(const QString &path) noexcept;
     bool waitUntilReadableAsync() noexcept;
@@ -192,6 +200,13 @@ private:
     QString m_mimeType;
     QFileSystemWatcher *m_file_watcher{nullptr};
     FitMode m_fit_mode;
+
+    // For pre-decoded playback (small GIFs)
+    QVector<QPixmap> m_gifFrames;
+    QVector<int> m_gifDelays;
+    QTimer *m_gifTimer   = nullptr;
+    int m_currentFrame   = 0;
+    bool m_usePreDecoded = false;
 
     PropertiesWidget *m_prop_widget{nullptr};
 };

@@ -1,0 +1,1 @@
+- [ ] Optimize gif loading

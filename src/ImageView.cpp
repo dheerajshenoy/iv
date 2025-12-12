@@ -78,19 +78,42 @@ ImageView::openFile(const QString &filepath) noexcept
     m_filepath       = filepath;
     const auto bytes = QFileInfo(m_filepath).size();
     m_filesize       = humanReadableSize(bytes);
+    m_mimeType       = getMimeType(filepath);
 
-    m_isGif = false;
-    stopGifAnimation();
+    QImageReader reader(filepath);
+    m_isGif = reader.supportsAnimation();
 
-    m_mimeType = getMimeType(filepath);
-
-    m_success = false;
-
-    QtConcurrent::run([this, filepath]() { m_success = render(); }).waitForFinished();
-
-    if (m_success)
+    if (m_isGif)
     {
-        m_gview->fitInView(m_pix_item, Qt::KeepAspectRatio);
+        stopGifAnimation();
+        renderAnimatedImage();
+        m_success = true;
+
+        if (m_success)
+        {
+            m_gview->fitInView(m_pix_item, Qt::KeepAspectRatio);
+        }
+    }
+    else
+    {
+        stopGifAnimation();
+
+        // Load static image asynchronously without blocking
+        auto future = QtConcurrent::run([this, filepath]() { return render(); });
+
+        auto *watcher = new QFutureWatcher<bool>(this);
+        connect(watcher, &QFutureWatcher<bool>::finished, this, [this, watcher]()
+        {
+            m_success = watcher->result();
+            if (m_success)
+            {
+                m_gview->fitInView(m_pix_item, Qt::KeepAspectRatio);
+            }
+            watcher->deleteLater();
+        });
+        watcher->setFuture(future);
+
+        return true; // Return immediately for async loading
     }
 
     return m_success;
@@ -445,55 +468,37 @@ ImageView::humanReadableSize(qint64 bytes) noexcept
 void
 ImageView::renderAnimatedImage() noexcept
 {
-    if (m_movie)
+    const qint64 fileSize  = QFileInfo(m_filepath).size();
+    const qint64 threshold = 10 * 1024 * 1024; // 10 MB
+
+    if (fileSize > threshold)
     {
-        m_movie->stop();
-        disconnect(m_movie, &QMovie::frameChanged, this, &ImageView::updateGifFrame);
-        m_movie->deleteLater();
-        m_movie = nullptr;
+        // Use QMovie for large files
+        renderWithQMovie();
     }
-    m_isGif = true;
-    m_movie = new QMovie(m_filepath, QByteArray(), this);
-    connect(m_movie, &QMovie::frameChanged, this, &ImageView::updateGifFrame);
-    m_movie->start();
-}
-
-void
-ImageView::updateGifFrame(int /*frameNumber*/) noexcept
-{
-    if (!m_movie)
-        return;
-
-    QPixmap frame = m_movie->currentPixmap();
-
-    m_pix_item->setPixmap(frame);
-
-    m_minimap->setPixmap(frame);
-    if (!m_config.ui.minimap_image)
-        m_minimap->showOverlayOnly(true);
-}
-
-void
-ImageView::stopGifAnimation() noexcept
-{
-    if (m_movie)
-        m_movie->stop();
-}
-
-void
-ImageView::startGifAnimation() noexcept
-{
-    if (m_movie)
-        m_movie->start();
+    else
+    {
+        // Pre-decode for small files
+        renderWithPreDecode();
+    }
+    // if (m_movie)
+    // {
+    //     m_movie->stop();
+    //     disconnect(m_movie, &QMovie::frameChanged, this, &ImageView::updateGifFrame);
+    //     m_movie->deleteLater();
+    //     m_movie = nullptr;
+    // }
+    // m_isGif = true;
+    // m_movie = new QMovie(m_filepath, QByteArray(), this);
+    // connect(m_movie, &QMovie::frameChanged, this, &ImageView::updateGifFrame);
+    // m_movie->start();
 }
 
 void
 ImageView::showEvent(QShowEvent *e)
 {
     if (m_isGif)
-    {
-        startGifAnimation();
-    }
+        startGifPlayback();
 
     QWidget::showEvent(e);
 }
@@ -953,4 +958,179 @@ ImageView::showFilePropertiesDialog() noexcept
     }
 #endif
     m_prop_widget->show();
+}
+
+void
+ImageView::renderWithQMovie() noexcept
+{
+    if (m_movie)
+    {
+        m_movie->stop();
+        m_movie->deleteLater();
+        m_movie = nullptr;
+    }
+
+    m_movie = new QMovie(m_filepath, QByteArray(), this);
+    m_movie->setCacheMode(QMovie::CacheAll); // Cache all frames
+    m_movie->setSpeed(100);                  // Normal speed
+
+    connect(m_movie, &QMovie::frameChanged, this, [this](int frame) { updateGifFrame(frame); });
+
+    // Load first frame immediately
+    m_movie->jumpToFrame(0);
+    if (m_movie->isValid())
+    {
+        QPixmap frame = m_movie->currentPixmap();
+        m_pix_item->setPixmap(frame);
+        m_minimap->setPixmap(frame);
+        if (!m_config.ui.minimap_image)
+            m_minimap->showOverlayOnly(true);
+    }
+
+    m_movie->start();
+}
+
+void
+ImageView::renderWithPreDecode() noexcept
+{
+    m_gifFrames.clear();
+    m_gifDelays.clear();
+    m_currentFrame = 0;
+
+    // Pre-decode all frames in background thread
+    QFuture<void> future = QtConcurrent::run([this]()
+    {
+        QImageReader reader(m_filepath);
+        QVector<QPixmap> frames;
+        QVector<int> delays;
+
+        while (reader.canRead())
+        {
+            QImage image = reader.read();
+            if (image.isNull())
+                break;
+
+            int delay = reader.nextImageDelay();
+            if (delay <= 0)
+                delay = 100; // Default 100ms
+
+            frames.append(QPixmap::fromImage(image));
+            delays.append(delay);
+        }
+
+        // Update on main thread
+        QMetaObject::invokeMethod(this, [this, frames = std::move(frames), delays = std::move(delays)]() mutable
+        {
+            m_gifFrames = std::move(frames);
+            m_gifDelays = std::move(delays);
+            startGifPlayback();
+        }, Qt::QueuedConnection);
+    });
+}
+
+void
+ImageView::startGifPlayback() noexcept
+{
+    if (m_gifFrames.isEmpty())
+        return;
+
+    if (!m_gifTimer)
+    {
+        m_gifTimer = new QTimer(this);
+        connect(m_gifTimer, &QTimer::timeout, this, [&]() { updateGifFrame(); });
+    }
+
+    m_currentFrame = 0;
+
+    // Display first frame
+    const QPixmap &frame = m_gifFrames[0];
+    m_pix_item->setPixmap(frame);
+    m_minimap->setPixmap(frame);
+    if (!m_config.ui.minimap_image)
+        m_minimap->showOverlayOnly(true);
+
+    // Start animation
+    if (!m_gifDelays.isEmpty())
+    {
+        m_gifTimer->start(m_gifDelays[0]);
+    }
+}
+
+void
+ImageView::updateGifFrame(int frameNumber) noexcept
+{
+    if (m_usePreDecoded)
+    {
+        // Pre-decoded frame update
+        if (m_gifFrames.isEmpty())
+            return;
+
+        const QPixmap &frame = m_gifFrames[m_currentFrame];
+        m_pix_item->setPixmap(frame);
+        m_minimap->setPixmap(frame);
+
+        if (!m_config.ui.minimap_image)
+            m_minimap->showOverlayOnly(true);
+
+        // Schedule next frame
+        m_currentFrame = (m_currentFrame + 1) % m_gifFrames.size();
+        if (m_gifTimer && m_currentFrame < m_gifDelays.size())
+        {
+            m_gifTimer->setInterval(m_gifDelays[m_currentFrame]);
+        }
+    }
+    else
+    {
+        // QMovie frame update
+        if (!m_movie)
+            return;
+
+        QPixmap frame = m_movie->currentPixmap();
+        m_pix_item->setPixmap(frame);
+        m_minimap->setPixmap(frame);
+
+        if (!m_config.ui.minimap_image)
+            m_minimap->showOverlayOnly(true);
+    }
+}
+
+void
+ImageView::stopGifAnimation() noexcept
+{
+    // Stop QMovie
+    if (m_movie)
+    {
+        m_movie->stop();
+        m_movie->deleteLater();
+        m_movie = nullptr;
+    }
+
+    // Stop pre-decoded playback
+    if (m_gifTimer)
+    {
+        m_gifTimer->stop();
+    }
+    m_gifFrames.clear();
+    m_gifDelays.clear();
+    m_currentFrame  = 0;
+    m_usePreDecoded = false;
+}
+
+void
+ImageView::startGifAnimation() noexcept
+{
+    if (m_usePreDecoded)
+    {
+        if (m_gifTimer && !m_gifFrames.isEmpty())
+        {
+            m_gifTimer->start();
+        }
+    }
+    else
+    {
+        if (m_movie)
+        {
+            m_movie->start();
+        }
+    }
 }
