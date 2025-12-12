@@ -1,9 +1,9 @@
 #pragma once
 
+#include "Minimap.hpp"
+
 #include <QMap>
 #include <QString>
-
-#include "Minimap.hpp"
 
 struct Config
 {
@@ -31,6 +31,7 @@ struct Config
 
         bool tabs_shown{true};
         bool tabs_autohide{true};
+        QString tab_bar_position{"top"};
 
         bool statusbar_shown{true};
         bool menubar_shown{true};

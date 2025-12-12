@@ -63,6 +63,8 @@ public:
     void ShowFileProperties() noexcept;
     void OpenFileInNewWindow(const QString &filepath) noexcept;
 
+    QTabWidget::TabPosition tabBarPositionFromString(const QString &position) const noexcept;
+
     inline void ToggleStatusbar() const noexcept
     {
         m_panel->setVisible(!m_panel->isVisible());

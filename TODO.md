@@ -1,2 +1,0 @@
-- [X] Loading spinner for opening large/multiple images
-- [ ] Tab position config

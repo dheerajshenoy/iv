@@ -21,3 +21,5 @@
 - Add `--not-tabbed` option
 - Add `--config` option
 - Add `--commands` option
+- Loading spinner for opening large/multiple images
+- Tab position config

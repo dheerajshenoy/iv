@@ -10,6 +10,7 @@
 #include <QKeySequence>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QProgressDialog>
 #include <QScreen>
 #include <QShortcut>
 #include <QTabBar>
@@ -17,7 +18,6 @@
 #include <QWindow>
 #include <qnamespace.h>
 #include <qshortcut.h>
-#include <QProgressDialog>
 
 void
 MainWindow::readArgs(argparse::ArgumentParser &parser) noexcept
@@ -279,7 +279,8 @@ MainWindow::OpenFiles(const QList<QString> &files) noexcept
     QProgressDialog progress("Opening files...", "Cancel", 0, files.size(), this);
     progress.setWindowModality(Qt::WindowModal);
     progress.setMinimumDuration(0);
-    for (const QString &filepath : files) {
+    for (const QString &filepath : files)
+    {
         OpenFile(filepath);
         progress.setValue(progress.value() + 1);
         if (progress.wasCanceled())
@@ -294,7 +295,8 @@ MainWindow::OpenFiles(const std::vector<std::string> &files) noexcept
     QProgressDialog progress("Opening files...", "Cancel", 0, files.size(), this);
     progress.setWindowModality(Qt::WindowModal);
     progress.setMinimumDuration(0);
-    for (const std::string &filepath : files) {
+    for (const std::string &filepath : files)
+    {
         OpenFile(QString::fromStdString(filepath));
         progress.setValue(progress.value() + 1);
         if (progress.wasCanceled())
@@ -555,6 +557,7 @@ MainWindow::initConfig() noexcept
     {
         m_config.ui.tabs_shown              = ui["tabs_shown"].value_or(true);
         m_config.ui.tabs_autohide           = ui["tabs_auto_hide"].value_or(true);
+        m_config.ui.tab_bar_position        = ui["tab_bar_position"].value_or("top");
         m_config.ui.menubar_shown           = ui["menubar_shown"].value_or(true);
         m_config.ui.statusbar_shown         = ui["statusbar_shown"].value_or(true);
         m_config.ui.hscrollbar_shown        = ui["hscrollbar_shown"].value_or(true);
@@ -570,27 +573,29 @@ MainWindow::initConfig() noexcept
         m_config.ui.minimap_image_opacity   = ui["minimap_image_opacity"].value_or(0.7f);
         QString minimap_location            = ui["minimap_location"].value_or("bottom-right");
 
-        Minimap::Location loc;
-        if (minimap_location == "top-left")
-            loc = Minimap::Location::TOP_LEFT;
-        else if (minimap_location == "top-center")
-            loc = Minimap::Location::TOP_CENTER;
-        else if (minimap_location == "top-right")
-            loc = Minimap::Location::TOP_RIGHT;
-        else if (minimap_location == "bottom-left")
-            loc = Minimap::Location::BOTTOM_LEFT;
-        else if (minimap_location == "bottom-center")
-            loc = Minimap::Location::BOTTOM_CENTER;
-        else if (minimap_location == "center")
-            loc = Minimap::Location::CENTER;
-        else if (minimap_location == "center-left")
-            loc = Minimap::Location::CENTER_LEFT;
-        else if (minimap_location == "center-right")
-            loc = Minimap::Location::CENTER_RIGHT;
-        else
-            loc = Minimap::Location::BOTTOM_RIGHT;
+        {
+            Minimap::Location loc;
+            if (minimap_location == "top-left")
+                loc = Minimap::Location::TOP_LEFT;
+            else if (minimap_location == "top-center")
+                loc = Minimap::Location::TOP_CENTER;
+            else if (minimap_location == "top-right")
+                loc = Minimap::Location::TOP_RIGHT;
+            else if (minimap_location == "bottom-left")
+                loc = Minimap::Location::BOTTOM_LEFT;
+            else if (minimap_location == "bottom-center")
+                loc = Minimap::Location::BOTTOM_CENTER;
+            else if (minimap_location == "center")
+                loc = Minimap::Location::CENTER;
+            else if (minimap_location == "center-left")
+                loc = Minimap::Location::CENTER_LEFT;
+            else if (minimap_location == "center-right")
+                loc = Minimap::Location::CENTER_RIGHT;
+            else
+                loc = Minimap::Location::BOTTOM_RIGHT;
+            m_config.ui.minimap_location = loc;
+        }
 
-        m_config.ui.minimap_location             = loc;
         m_config.ui.minimap_overlay_color        = ui["minimap_overlay_color"].value_or("#55FF0000");
         m_config.ui.minimap_overlay_border_color = ui["minimap_overlay_border"].value_or("#5500FF00");
         m_config.ui.minimap_overlay_border_width = ui["minimap_overlay_border_width"].value_or(0);
@@ -1053,7 +1058,7 @@ MainWindow::applyConfigChanges() noexcept
     m_toggle_panel_action->setChecked(m_config.ui.statusbar_shown);
     m_toggle_auto_reload_action->setShortcut(m_config.shortcutMap["auto_reload"]);
     m_toggle_auto_reload_action->setChecked(m_config.behavior.auto_reload);
-
+    m_tab_widget->setTabPosition(tabBarPositionFromString(m_config.ui.tab_bar_position));
     m_tab_widget->tabBar()->setVisible(m_config.ui.tabs_shown);
     m_tab_widget->setTabBarAutoHide(m_config.ui.tabs_autohide);
     menuBar()->setVisible(m_config.ui.menubar_shown);
@@ -1068,4 +1073,21 @@ MainWindow::applyConfigChanges() noexcept
             temp->UpdateFromConfig();
         }
     }
+}
+
+QTabWidget::TabPosition
+MainWindow::tabBarPositionFromString(const QString &locationStr) const noexcept
+{
+    QTabWidget::TabPosition loc;
+    if (locationStr == "top")
+        loc = QTabWidget::TabPosition::North;
+    else if (locationStr == "bottom")
+        loc = QTabWidget::TabPosition::South;
+    else if (locationStr == "left")
+        loc = QTabWidget::TabPosition::West;
+    else if (locationStr == "right")
+        loc = QTabWidget::TabPosition::East;
+    else
+        loc = QTabWidget::TabPosition::North;
+    return loc;
 }
