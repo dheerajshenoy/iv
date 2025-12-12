@@ -17,6 +17,7 @@
 #include <QWindow>
 #include <qnamespace.h>
 #include <qshortcut.h>
+#include <QProgressDialog>
 
 void
 MainWindow::readArgs(argparse::ArgumentParser &parser) noexcept
@@ -275,16 +276,31 @@ MainWindow::handleTabClose(int index) noexcept
 void
 MainWindow::OpenFiles(const QList<QString> &files) noexcept
 {
-    // Show a loading cursor while opening multiple files
-    for (const QString &filepath : files)
+    QProgressDialog progress("Opening files...", "Cancel", 0, files.size(), this);
+    progress.setWindowModality(Qt::WindowModal);
+    progress.setMinimumDuration(0);
+    for (const QString &filepath : files) {
         OpenFile(filepath);
+        progress.setValue(progress.value() + 1);
+        if (progress.wasCanceled())
+            break;
+    }
+    progress.close();
 }
 
 void
 MainWindow::OpenFiles(const std::vector<std::string> &files) noexcept
 {
-    for (const std::string &filepath : files)
+    QProgressDialog progress("Opening files...", "Cancel", 0, files.size(), this);
+    progress.setWindowModality(Qt::WindowModal);
+    progress.setMinimumDuration(0);
+    for (const std::string &filepath : files) {
         OpenFile(QString::fromStdString(filepath));
+        progress.setValue(progress.value() + 1);
+        if (progress.wasCanceled())
+            break;
+    }
+    progress.close();
 }
 
 void
