@@ -59,6 +59,11 @@ MainWindow::readArgs(argparse::ArgumentParser &parser) noexcept
             OpenFiles(files);
         }
     }
+    else
+    {
+        // Construct the main window
+        this->construct();
+    }
 }
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
@@ -270,6 +275,7 @@ MainWindow::handleTabClose(int index) noexcept
 void
 MainWindow::OpenFiles(const QList<QString> &files) noexcept
 {
+    // Show a loading cursor while opening multiple files
     for (const QString &filepath : files)
         OpenFile(filepath);
 }
@@ -303,12 +309,7 @@ MainWindow::OpenFile(const QString &filepath) noexcept
 
     if (fp.isEmpty())
     {
-
         QStringList filepaths = openFileDialog();
-
-        if (filepaths.isEmpty())
-            return;
-
         OpenFiles(filepaths);
         return;
     }

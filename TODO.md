@@ -1,2 +1,1 @@
-- [X] Add touchpad gestures
-- [X] Fix minimap region preview bug
+- [ ] Loading spinner for opening large/multiple images
