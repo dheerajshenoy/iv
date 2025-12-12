@@ -89,6 +89,9 @@ public:
         QTransform t;
         t.scale(s, s);      // absolute scale
         setTransform(t);    // replace the current transform
+        // Set Minimum Size
+        QSizeF size = m_pix_item->boundingRect().size() * s;
+        setMinimumSize(size.toSize());
         // updateSceneRect();  // adjust the scene rect if needed
     }
 

@@ -71,6 +71,9 @@ ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m
 bool
 ImageView::openFile(const QString &filepath) noexcept
 {
+    if (!QFile::exists(filepath))
+        return false;
+
     m_filepath       = filepath;
     const auto bytes = QFileInfo(m_filepath).size();
     m_filesize       = humanReadableSize(bytes);
@@ -84,14 +87,8 @@ ImageView::openFile(const QString &filepath) noexcept
 
     QtConcurrent::run([this, filepath]() { m_success = render(); }).waitForFinished();
 
-    if (!m_success)
-    {
-        QMessageBox::critical(this, "Error opening image", "Failed to open image: " + filepath);
-        return m_success;
-    }
-
-    m_gview->fitInView(m_pix_item, Qt::KeepAspectRatio);
-    // m_gview->centerOn(m_pix_item);
+    if (m_success)
+        m_gview->fitInView(m_pix_item, Qt::KeepAspectRatio);
 
     return m_success;
 }

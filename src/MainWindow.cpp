@@ -294,19 +294,28 @@ MainWindow::OpenFile(const QString &filepath) noexcept
 
     bool success = m_imgv->openFile(filepath);
     if (!success)
-        return;
+    {
+        qWarning() << "Failed to open file:" << filepath;
+        QMessageBox::warning(this, "Open File Error", QString("Failed to open file:\n%1").arg(filepath));
 
-    updateMenuActions(true);
+        m_imgv->deleteLater();
+        m_imgv = nullptr;
+    }
+    else
+    {
 
-    m_recent_file_manager->addFilePath(filepath);
+        updateMenuActions(true);
 
-    if (m_config.behavior.auto_reload)
-        m_imgv->setAutoReload(true);
+        m_recent_file_manager->addFilePath(filepath);
 
-    m_tab_widget->addTab(m_imgv, fp);
-    m_tab_widget->setCurrentWidget(m_imgv); // Make it the active tab
-    connect(m_imgv, &ImageView::openFilesRequested, this,
-            [&](const QStringList &files) { OpenFiles(files); }); // drop event
+        if (m_config.behavior.auto_reload)
+            m_imgv->setAutoReload(true);
+
+        m_tab_widget->addTab(m_imgv, fp);
+        m_tab_widget->setCurrentWidget(m_imgv); // Make it the active tab
+        connect(m_imgv, &ImageView::openFilesRequested, this,
+                [&](const QStringList &files) { OpenFiles(files); }); // drop event
+    }
 }
 
 void
@@ -943,8 +952,6 @@ MainWindow::ShowFileProperties() noexcept
 void
 MainWindow::onConfigFileChanged(const QString &path) noexcept
 {
-    qDebug() << "Config file changed:" << path;
-
     // Stop watching temporarily to avoid duplicate signals
     m_config_file_watcher->removePath(path);
 
@@ -970,8 +977,6 @@ MainWindow::onConfigFileChanged(const QString &path) noexcept
         }
         file.close();
 
-        // File is ready - reload configuration
-        qDebug() << "Config reloaded!";
         initConfig();
         applyConfigChanges();
 
