@@ -19,10 +19,14 @@ main(int argc, char *argv[])
         .default_value(false)
         .implicit_value(true);
 
-    program.add_argument("-c", "--commands")
+    program.add_argument("--commands")
         .help("Show list of available commands, useful for assigning shortcuts")
         .default_value(false)
         .implicit_value(true);
+
+    program.add_argument("-c", "--config")
+        .help("Path to configuration file")
+        .default_value(QString());
 
     program.add_argument("files")
         .help("File path(s) to open")

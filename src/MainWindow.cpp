@@ -37,6 +37,15 @@ MainWindow::readArgs(argparse::ArgumentParser &parser) noexcept
         exit(0);
     }
 
+    if (parser.is_used("config"))
+    {
+        QString configPath = parser.get<QString>("config");
+        if (!configPath.isEmpty())
+        {
+            m_config_file_path = configPath;
+        }
+    }
+
     // Construct the main window
     this->construct();
     updateMenuActions(false);
