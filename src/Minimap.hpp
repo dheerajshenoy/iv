@@ -6,19 +6,22 @@
 #include <QGraphicsItem>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
+#include <QGraphicsSceneMouseEvent>
 #include <QGraphicsView>
 #include <QPen>
 #include <QResizeEvent>
 #include <QSize>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <qgraphicsitem.h>
 #include <qnamespace.h>
 
 // Custom pixmap item with border support
-class BorderedPixmapItem : public QGraphicsPixmapItem
+class BorderedPixmapItem : public QObject, public QGraphicsPixmapItem
 {
+    Q_OBJECT
 public:
-    BorderedPixmapItem(QGraphicsItem *parent = nullptr) : QGraphicsPixmapItem(parent) {}
+    BorderedPixmapItem(QGraphicsItem *parent = nullptr) : QObject(), QGraphicsPixmapItem(parent) {}
 
     void setBorderColor(const QColor &color)
     {
@@ -71,6 +74,15 @@ protected:
         }
     }
 
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override
+    {
+        emit pixmapClicked(mapToScene(event->pos()));
+        QGraphicsPixmapItem::mousePressEvent(event);
+    }
+
+signals:
+    void pixmapClicked(const QPointF &pos);
+
 private:
     bool m_border_visible{false};
     int m_border_width{5};
@@ -96,6 +108,8 @@ public:
 
         // Add items to scene
         m_scene->addItem(m_pix_item);
+
+        connect(m_pix_item, &BorderedPixmapItem::pixmapClicked, this, &Minimap::minimapClicked);
 
         // Important: Set viewport to transparent
         viewport()->setAutoFillBackground(false);
@@ -199,12 +213,6 @@ protected:
     {
         updateSceneRect();
         QGraphicsView::resizeEvent(event);
-    }
-
-    void mousePressEvent(QMouseEvent *event) override
-    {
-        emit minimapClicked(mapToScene(event->pos()));
-        QGraphicsView::mousePressEvent(event);
     }
 
 private:
