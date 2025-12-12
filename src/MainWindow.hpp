@@ -62,6 +62,9 @@ public:
     void ToggleAutoFit() noexcept;
     void ShowFileProperties() noexcept;
     void OpenFileInNewWindow(const QString &filepath) noexcept;
+    void ToggleTabBar() noexcept;
+    void ToggleHScrollBar() noexcept;
+    void ToggleVScrollBar() noexcept;
 
     QTabWidget::TabPosition tabBarPositionFromString(const QString &position) const noexcept;
 
@@ -118,6 +121,9 @@ private:
     QAction *m_toggle_auto_reload_action{nullptr};
     QAction *m_toggle_panel_action{nullptr};
     QAction *m_toggle_menubar_action{nullptr};
+    QAction *m_toggle_tabbar_action{nullptr};
+    QAction *m_toggle_hscrollbar_action{nullptr};
+    QAction *m_toggle_vscrollbar_action{nullptr};
     QAction *m_file_properties_action{nullptr};
 
     TabWidget *m_tab_widget{new TabWidget()};

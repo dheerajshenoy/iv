@@ -54,6 +54,8 @@ public:
     void flipLeftRight() noexcept;
     void flipUpDown() noexcept;
     void toggleAutoReload() noexcept;
+    void toggleHScrollbar() noexcept;
+    void toggleVScrollbar() noexcept;
     void setAutoReload(bool enabled) noexcept;
     inline void setAutoFit(bool enabled) noexcept
     {

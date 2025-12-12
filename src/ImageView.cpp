@@ -711,6 +711,18 @@ ImageView::toggleAutoReload() noexcept
 }
 
 void
+ImageView::toggleHScrollbar() noexcept
+{
+    m_hscrollbar->setVisible(!m_hscrollbar->isVisible());
+}
+
+void
+ImageView::toggleVScrollbar() noexcept
+{
+    m_vscrollbar->setVisible(!m_vscrollbar->isVisible());
+}
+
+void
 ImageView::setAutoReload(bool enabled) noexcept
 {
     m_auto_reload = enabled;

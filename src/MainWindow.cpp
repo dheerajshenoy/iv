@@ -158,6 +158,21 @@ MainWindow::initGui() noexcept
     m_toggle_menubar_action->setCheckable(true);
     m_toggle_menubar_action->setChecked(m_config.ui.menubar_shown);
 
+    m_toggle_tabbar_action = m_toggle_menu->addAction(QString("Tabs\t%1").arg(m_config.shortcutMap["toggle_tabs"]),
+                                                      this, &MainWindow::ToggleTabBar);
+    m_toggle_tabbar_action->setCheckable(true);
+    m_toggle_tabbar_action->setChecked(m_config.ui.tabs_shown);
+
+    m_toggle_hscrollbar_action = m_toggle_menu->addAction(
+        QString("H Scrollbar\t%1").arg(m_config.shortcutMap["toggle_hscrollbar"]), this, &MainWindow::ToggleHScrollBar);
+    m_toggle_hscrollbar_action->setCheckable(true);
+    m_toggle_hscrollbar_action->setChecked(m_config.ui.tabs_shown);
+
+    m_toggle_vscrollbar_action = m_toggle_menu->addAction(
+        QString("V Scrollbar\t%1").arg(m_config.shortcutMap["toggle_vscrollbar"]), this, &MainWindow::ToggleVScrollBar);
+    m_toggle_vscrollbar_action->setCheckable(true);
+    m_toggle_vscrollbar_action->setChecked(m_config.ui.tabs_shown);
+
     m_toggle_panel_action = m_toggle_menu->addAction(
         QString("Statusbar\t%1").arg(m_config.shortcutMap["toggle_statusbar"]), this, &MainWindow::ToggleStatusbar);
     m_toggle_panel_action->setCheckable(true);
@@ -724,8 +739,7 @@ MainWindow::initCommandMap() noexcept
 
     m_commandMap["toggle_tabs"] = [this]()
     {
-        QTabBar *tabbar = m_tab_widget->tabBar();
-        tabbar->setVisible(!tabbar->isVisible());
+        ToggleTabBar();
     };
 
     m_commandMap["toggle_fullscreen"] = [this]()
@@ -1056,6 +1070,7 @@ MainWindow::applyConfigChanges() noexcept
     m_toggle_minimap_action->setChecked(m_config.ui.minimap_shown);
     m_toggle_panel_action->setShortcut(m_config.shortcutMap["toggle_statusbar"]);
     m_toggle_panel_action->setChecked(m_config.ui.statusbar_shown);
+    m_toggle_tabbar_action->setShortcut(m_config.shortcutMap["toggle_tabs"]);
     m_toggle_auto_reload_action->setShortcut(m_config.shortcutMap["auto_reload"]);
     m_toggle_auto_reload_action->setChecked(m_config.behavior.auto_reload);
     m_tab_widget->setTabPosition(tabBarPositionFromString(m_config.ui.tab_bar_position));
@@ -1090,4 +1105,23 @@ MainWindow::tabBarPositionFromString(const QString &locationStr) const noexcept
     else
         loc = QTabWidget::TabPosition::North;
     return loc;
+}
+
+void
+MainWindow::ToggleTabBar() noexcept
+{
+    QTabBar *tabbar = m_tab_widget->tabBar();
+    tabbar->setVisible(!tabbar->isVisible());
+}
+
+void MainWindow::ToggleHScrollBar() noexcept
+{
+    if (m_imgv)
+        m_imgv->toggleHScrollbar();
+}
+
+void MainWindow::ToggleVScrollBar() noexcept
+{
+    if (m_imgv)
+        m_imgv->toggleVScrollbar();
 }
