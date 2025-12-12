@@ -96,7 +96,6 @@ private:
 
     QMenu *m_file_menu{nullptr};
     QMenu *m_view_menu{nullptr};
-    QMenu *m_edit_menu{nullptr};
     QMenu *m_help_menu{nullptr};
     QMenu *m_recent_files_menu{nullptr};
 

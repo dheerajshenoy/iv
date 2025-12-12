@@ -12,6 +12,7 @@
 #include <QThreadPool>
 #include <QtConcurrent/QtConcurrent>
 #include <QtConcurrent/qtconcurrentreducekernel.h>
+#include <qnamespace.h>
 
 #ifdef HAS_LIBAVIF
 #include <avif/avif.h>
@@ -36,7 +37,6 @@ ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m
     m_gview->setContentsMargins(0, 0, 0, 0);
 
     m_minimap = new Minimap(m_gview);
-    // m_minimap->setParent(m_gview->viewport()); // flushes to the edge like I want
     m_minimap->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     m_minimap->raise();
 
@@ -576,57 +576,68 @@ ImageView::updateMinimapPosition() noexcept
 
     int x = 0;
     int y = 0;
+    QFlags<Qt::AlignmentFlag> alignment;
 
     switch (m_minimap->location())
     {
         case Minimap::Location::TOP_LEFT:
-            x = padding;
-            y = padding;
+            x         = padding;
+            y         = padding;
+            alignment = Qt::AlignTop | Qt::AlignLeft;
             break;
 
         case Minimap::Location::TOP_RIGHT:
-            x = gw - m_minimap->width() - padding;
-            y = padding;
+            x         = gw - m_minimap->width() - padding;
+            y         = padding;
+            alignment = Qt::AlignTop | Qt::AlignRight;
             break;
 
         case Minimap::Location::BOTTOM_LEFT:
-            x = padding;
-            y = gh - m_minimap->height() - padding;
+            x         = padding;
+            y         = gh - m_minimap->height() - padding;
+            alignment = Qt::AlignBottom | Qt::AlignLeft;
             break;
 
         case Minimap::Location::BOTTOM_RIGHT:
-            x = gw - m_minimap->width() - padding;
-            y = gh - m_minimap->height() - padding;
+            x         = gw - m_minimap->width() - padding;
+            y         = gh - m_minimap->height() - padding;
+            alignment = Qt::AlignBottom | Qt::AlignRight;
             break;
 
         case Minimap::Location::TOP_CENTER:
-            x = (gw - m_minimap->width()) / 2;
-            y = padding;
+            x         = (gw - m_minimap->width()) / 2;
+            y         = padding;
+            alignment = Qt::AlignTop | Qt::AlignHCenter;
             break;
 
         case Minimap::Location::BOTTOM_CENTER:
-            x = (gw - m_minimap->width()) / 2;
-            y = gh - m_minimap->height() - padding;
+            x         = (gw - m_minimap->width()) / 2;
+            y         = gh - m_minimap->height() - padding;
+            alignment = Qt::AlignBottom | Qt::AlignHCenter;
             break;
 
         case Minimap::Location::CENTER_LEFT:
-            x = padding;
-            y = (gh - m_minimap->height()) / 2;
+            x         = padding;
+            y         = (gh - m_minimap->height()) / 2;
+            alignment = Qt::AlignVCenter | Qt::AlignLeft;
             break;
 
         case Minimap::Location::CENTER_RIGHT:
-            x = gw - m_minimap->width() - padding;
-            y = (gh - m_minimap->height()) / 2;
+            x         = gw - m_minimap->width() - padding;
+            y         = (gh - m_minimap->height()) / 2;
+            alignment = Qt::AlignVCenter | Qt::AlignRight;
             break;
 
         case Minimap::Location::CENTER:
-            x = (gw - m_minimap->width()) / 2;
-            y = (gh - m_minimap->height()) / 2;
+            x         = (gw - m_minimap->width()) / 2;
+            y         = (gh - m_minimap->height()) / 2;
+            alignment = Qt::AlignCenter;
             break;
     }
 
     // Move the minimap relative to the QGraphicsView widget
     m_minimap->move(x, y);
+    m_minimap->setAlignment(alignment);
 }
 
 void

@@ -87,7 +87,6 @@ MainWindow::construct() noexcept
 
     m_file_menu = menuBar()->addMenu("&File");
     m_view_menu = menuBar()->addMenu("&View");
-    m_edit_menu = menuBar()->addMenu("&Edit");
     m_help_menu = menuBar()->addMenu("&Help");
 
     initGui();
@@ -182,7 +181,7 @@ MainWindow::initGui() noexcept
     m_toggle_panel_action->setCheckable(true);
     m_toggle_panel_action->setChecked(m_config.ui.statusbar_shown);
 
-    m_toggle_auto_reload_action = m_edit_menu->addAction(
+    m_toggle_auto_reload_action = m_toggle_menu->addAction(
         QString("Auto Reload\t%1").arg(m_config.shortcutMap["auto_reload"]), this, &MainWindow::ToggleAutoReload);
     m_toggle_auto_reload_action->setCheckable(true);
     m_toggle_auto_reload_action->setChecked(m_config.behavior.auto_reload);
@@ -907,8 +906,6 @@ MainWindow::setupKeybinding(const QString &action, const QString &key) noexcept
     connect(shortcut, &QShortcut::activated, this, [it]() { it.value()(); });
     m_config.shortcutMap[action] = key;
     m_shortcut_map[action]       = shortcut;
-
-    qDebug() << "Set keybinding:" << action << "->" << key;
 }
 
 void
@@ -978,6 +975,7 @@ MainWindow::updateMenuActions(bool state) noexcept
     m_close_file_action->setEnabled(state);
     m_toggle_auto_reload_action->setEnabled(state);
     m_open_containing_folder_action->setEnabled(state);
+    m_file_properties_action->setEnabled(state);
 }
 
 void

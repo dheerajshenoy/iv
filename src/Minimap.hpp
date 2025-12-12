@@ -32,6 +32,10 @@ public:
 
         // Add items to scene
         m_scene->addItem(m_pix_item);
+
+        // Important: Set viewport to transparent
+        viewport()->setAutoFillBackground(false);
+        setStyleSheet("QGraphicsView { background: transparent; }");
     }
 
     enum class Location
@@ -71,6 +75,7 @@ public:
     void setPixmap(const QPixmap &pix) noexcept
     {
         m_pix_item->setPixmap(pix);
+        m_pix_item->setPos(0, 0); // Ensure pixmap is at origin
         updateSceneRect();
     }
 
@@ -142,17 +147,29 @@ private:
         if (m_pix_item->pixmap().isNull())
             return;
 
-        m_scene->setSceneRect(m_pix_item->boundingRect());
+        // Get the pixmap's bounding rect in item coordinates
+        QRectF pixRect = m_pix_item->boundingRect();
 
-        QRectF br   = m_pix_item->boundingRect();
-        QSizeF view = viewport()->size();
+        // Get the scene bounding rect (accounts for rotation)
+        QRectF sceneBounds = m_pix_item->sceneBoundingRect();
 
-        qreal sx = view.width() / br.width();
-        qreal sy = view.height() / br.height();
-        qreal s  = qMin(sx, sy); // or max if you want no padding vertically/horizontally
+        // Set scene rect to EXACTLY the transformed bounds, starting at 0,0
+        m_scene->setSceneRect(sceneBounds);
 
+        // Get viewport size
+        QSizeF viewSize = viewport()->size();
+
+        // Calculate scale to fit the scene rect in viewport
+        qreal sx    = viewSize.width() / sceneBounds.width();
+        qreal sy    = viewSize.height() / sceneBounds.height();
+        qreal scale = qMin(sx, sy);
+
+        // Reset transform and apply new scale
         resetTransform();
-        scale(s, s);
+        setTransform(QTransform::fromScale(scale, scale));
+
+        // Align to top-left (0,0) - no centering
+        setAlignment(Qt::AlignLeft | Qt::AlignTop);
     }
 
     // void updateSceneRect() noexcept
