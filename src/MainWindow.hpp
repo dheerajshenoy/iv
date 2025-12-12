@@ -17,7 +17,8 @@
 #include <qevent.h>
 
 #define __IV_VERSION "0.2.0"
-#define CONFIG_DIR QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + QDir::separator() + "iv" + QDir::separator()
+#define CONFIG_DIR                                                                                                     \
+    QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + QDir::separator() + "iv" + QDir::separator()
 
 class ImageView;
 
@@ -134,6 +135,7 @@ private:
     Config m_config;
     RecentFilesManager *m_recent_file_manager{nullptr};
     QMap<QString, float> m_screen_dpr_map; // DPR per screen
+    QMap<QString, QShortcut *> m_shortcut_map;
     QFileSystemWatcher *m_config_file_watcher{nullptr};
     QString m_config_file_path;
 };

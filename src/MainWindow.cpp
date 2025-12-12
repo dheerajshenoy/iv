@@ -22,6 +22,7 @@
 void
 MainWindow::readArgs(argparse::ArgumentParser &parser) noexcept
 {
+
     // Check if version or commands flag is used
     if (parser.is_used("version"))
     {
@@ -43,6 +44,10 @@ MainWindow::readArgs(argparse::ArgumentParser &parser) noexcept
         const QString configPath = QString::fromStdString(parser.get<std::string>("config"));
         if (!configPath.isEmpty())
             m_config_file_path = configPath;
+    }
+    else
+    {
+        m_config_file_path = CONFIG_DIR + "config.toml";
     }
 
     if (parser.is_used("not-tabbed"))
@@ -551,8 +556,6 @@ MainWindow::updateFileinfoInPanel() noexcept
 void
 MainWindow::initConfig() noexcept
 {
-
-    m_config_file_path = CONFIG_DIR + "config.toml";
     toml::table toml;
 
     try
@@ -581,12 +584,21 @@ MainWindow::initConfig() noexcept
         m_config.ui.vscrollbar_auto_hide    = ui["vscrollbar_auto_hide"].value_or(true);
         m_config.ui.minimap_shown           = ui["minimap_shown"].value_or(false);
         m_config.ui.minimap_auto_hide       = ui["minimap_auto_hide"].value_or(true);
+        m_config.ui.minimap_padding         = ui["minimap_padding"].value_or(10.0f);
         m_config.ui.minimap_clickable       = ui["minimap_clickable"].value_or(true);
         m_config.ui.minimap_overlay_movable = ui["minimap_overlay_movable"].value_or(true);
-        m_config.ui.minimap_scale           = ui["minimap_scale"].value_or(0.2f);
-        m_config.ui.minimap_image           = ui["minimap_image"].value_or(true);
-        m_config.ui.minimap_image_opacity   = ui["minimap_image_opacity"].value_or(0.7f);
-        QString minimap_location            = ui["minimap_location"].value_or("bottom-right");
+
+        if (ui["minimap_size"].is_table())
+        {
+            const auto size_table    = ui["minimap_size"];
+            const int width          = size_table["width"].value_or(200);
+            const int height         = size_table["height"].value_or(200);
+            m_config.ui.minimap_size = QSize(width, height);
+        }
+
+        m_config.ui.minimap_image         = ui["minimap_image"].value_or(true);
+        m_config.ui.minimap_image_opacity = ui["minimap_image_opacity"].value_or(0.7f);
+        QString minimap_location          = ui["minimap_location"].value_or("bottom-right");
 
         {
             Minimap::Location loc;
@@ -880,14 +892,25 @@ MainWindow::initCommandMap() noexcept
 void
 MainWindow::setupKeybinding(const QString &action, const QString &key) noexcept
 {
-    auto it = m_commandMap.find(action);
+    // Remove existing shortcut for this action, if any
+    if (m_shortcut_map.contains(action))
+    {
+        QShortcut *existingShortcut = m_shortcut_map[action];
+        existingShortcut->disconnect();
+        existingShortcut->deleteLater();
+        m_shortcut_map.remove(action);
+    }
+
+    const auto it = m_commandMap.find(action);
     if (it == m_commandMap.end())
         return;
 
     QShortcut *shortcut = new QShortcut(QKeySequence(key), this);
-    connect(shortcut, &QShortcut::activated, this, [=]() { it.value()(); });
-
+    connect(shortcut, &QShortcut::activated, this, [it]() { it.value()(); });
     m_config.shortcutMap[action] = key;
+    m_shortcut_map[action]       = shortcut;
+
+    qDebug() << "Set keybinding:" << action << "->" << key;
 }
 
 void
@@ -1052,26 +1075,27 @@ MainWindow::onConfigFileChanged(const QString &path) noexcept
 void
 MainWindow::applyConfigChanges() noexcept
 {
-    m_open_file_action->setShortcut(m_config.shortcutMap["open_file"]);
-    m_open_containing_folder_action->setShortcut(m_config.shortcutMap["open_containing_folder"]);
-    m_file_properties_action->setShortcut(m_config.shortcutMap["file_properties"]);
-    m_close_file_action->setShortcut(m_config.shortcutMap["close_file"]);
-    m_exit_action->setShortcut(m_config.shortcutMap["exit"]);
-    m_zoom_in_action->setShortcut(m_config.shortcutMap["zoom_in"]);
-    m_zoom_out_action->setShortcut(m_config.shortcutMap["zoom_out"]);
-    m_rotate_clock_action->setShortcut(m_config.shortcutMap["rotate_clock"]);
-    m_rotate_anticlock_action->setShortcut(m_config.shortcutMap["rotate_anticlock"]);
-    m_fit_width_action->setShortcut(m_config.shortcutMap["fit_width"]);
-    m_fit_height_action->setShortcut(m_config.shortcutMap["fit_height"]);
-    m_fit_window_action->setShortcut(m_config.shortcutMap["fit_window"]);
-    m_auto_fit_action->setShortcut(m_config.shortcutMap["auto_fit"]);
-    m_auto_fit_action->setChecked(m_config.behavior.auto_fit);
-    m_toggle_minimap_action->setShortcut(m_config.shortcutMap["toggle_minimap"]);
-    m_toggle_minimap_action->setChecked(m_config.ui.minimap_shown);
-    m_toggle_panel_action->setShortcut(m_config.shortcutMap["toggle_statusbar"]);
+    // m_open_file_action->setShortcut(m_config.shortcutMap["open_file"]);
+    // m_open_containing_folder_action->setShortcut(m_config.shortcutMap["open_containing_folder"]);
+    // m_file_properties_action->setShortcut(m_config.shortcutMap["file_properties"]);
+    // m_close_file_action->setShortcut(m_config.shortcutMap["close_file"]);
+    // m_exit_action->setShortcut(m_config.shortcutMap["exit"]);
+    // m_zoom_in_action->setShortcut(m_config.shortcutMap["zoom_in"]);
+    // m_zoom_out_action->setShortcut(m_config.shortcutMap["zoom_out"]);
+    // m_rotate_clock_action->setShortcut(m_config.shortcutMap["rotate_clock"]);
+    // m_rotate_anticlock_action->setShortcut(m_config.shortcutMap["rotate_anticlock"]);
+    // m_fit_width_action->setShortcut(m_config.shortcutMap["fit_width"]);
+    // m_fit_height_action->setShortcut(m_config.shortcutMap["fit_height"]);
+    // m_fit_window_action->setShortcut(m_config.shortcutMap["fit_window"]);
+    // m_auto_fit_action->setShortcut(m_config.shortcutMap["auto_fit"]);
+    // m_toggle_minimap_action->setShortcut(m_config.shortcutMap["toggle_minimap"]);
+    // m_toggle_panel_action->setShortcut(m_config.shortcutMap["toggle_statusbar"]);
+    // m_toggle_tabbar_action->setShortcut(m_config.shortcutMap["toggle_tabs"]);
+    // m_toggle_auto_reload_action->setShortcut(m_config.shortcutMap["auto_reload"]);
+
     m_toggle_panel_action->setChecked(m_config.ui.statusbar_shown);
-    m_toggle_tabbar_action->setShortcut(m_config.shortcutMap["toggle_tabs"]);
-    m_toggle_auto_reload_action->setShortcut(m_config.shortcutMap["auto_reload"]);
+    m_toggle_minimap_action->setChecked(m_config.ui.minimap_shown);
+    m_auto_fit_action->setChecked(m_config.behavior.auto_fit);
     m_toggle_auto_reload_action->setChecked(m_config.behavior.auto_reload);
     m_tab_widget->setTabPosition(tabBarPositionFromString(m_config.ui.tab_bar_position));
     m_tab_widget->tabBar()->setVisible(m_config.ui.tabs_shown);
@@ -1114,13 +1138,15 @@ MainWindow::ToggleTabBar() noexcept
     tabbar->setVisible(!tabbar->isVisible());
 }
 
-void MainWindow::ToggleHScrollBar() noexcept
+void
+MainWindow::ToggleHScrollBar() noexcept
 {
     if (m_imgv)
         m_imgv->toggleHScrollbar();
 }
 
-void MainWindow::ToggleVScrollBar() noexcept
+void
+MainWindow::ToggleVScrollBar() noexcept
 {
     if (m_imgv)
         m_imgv->toggleVScrollbar();

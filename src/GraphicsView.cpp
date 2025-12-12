@@ -15,6 +15,8 @@ GraphicsView::GraphicsView(QWidget *parent) : QGraphicsView(parent)
     setInteractive(true);
     setMouseTracking(true);
     setAcceptDrops(false);
+    setFrameShadow(QFrame::Shadow::Plain);
+    setFrameStyle(QFrame::NoFrame);
 }
 
 void

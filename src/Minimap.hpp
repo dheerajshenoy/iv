@@ -9,6 +9,7 @@
 #include <QGraphicsView>
 #include <QPen>
 #include <QResizeEvent>
+#include <QSize>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -24,8 +25,10 @@ public:
         setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         setFrameShape(QFrame::NoFrame);
         setFrameShadow(QFrame::Plain);
+        setFrameStyle(QFrame::NoFrame);
         setBackgroundBrush(Qt::NoBrush);
         setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+        setStyleSheet("background: transparent");
 
         // Add items to scene
         m_scene->addItem(m_pix_item);
@@ -43,6 +46,16 @@ public:
         CENTER,
         CENTER_RIGHT
     };
+
+    inline void setMinimapPadding(float padding) noexcept
+    {
+        m_padding = padding;
+    }
+
+    inline float padding() const noexcept
+    {
+        return m_padding;
+    }
 
     inline void setClickable(bool clickable) noexcept
     {
@@ -68,7 +81,7 @@ public:
         updateSceneRect();
     }
 
-    inline void setPixmapOpacity(qreal opacity) noexcept
+    inline void setPixmapOpacity(qreal opacity) const noexcept
     {
         m_pix_item->setOpacity(opacity);
     }
@@ -84,15 +97,10 @@ public:
         setVisible(!state);
     }
 
-    void setMinimapScale(qreal s) noexcept
+    void setMinimapSize(QSize size) noexcept
     {
-        QTransform t;
-        t.scale(s, s);      // absolute scale
-        setTransform(t);    // replace the current transform
-        // Set Minimum Size
-        QSizeF size = m_pix_item->boundingRect().size() * s;
-        setMinimumSize(size.toSize());
-        // updateSceneRect();  // adjust the scene rect if needed
+        setFixedSize(size);
+        updateSceneRect(); // adjust the scene rect if needed
     }
 
     inline void setLocation(Location loc) noexcept
@@ -122,18 +130,19 @@ protected:
     }
 
 private:
-    void updateSceneRect()
-    {
-        if (!m_pix_item->pixmap().isNull())
-        {
-            m_scene->setSceneRect(m_pix_item->sceneBoundingRect());
-            // fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
-        }
-    }
-
+    float m_padding{10.0f};
     bool m_force_hidden{false};
     QGraphicsPixmapItem *m_pix_item{new QGraphicsPixmapItem()};
     QGraphicsScene *m_scene{new QGraphicsScene(this)};
     Location m_location{Location::BOTTOM_RIGHT};
     QPointF m_dragStart;
+
+    void updateSceneRect() noexcept
+    {
+        if (!m_pix_item->pixmap().isNull())
+        {
+            m_scene->setSceneRect(m_pix_item->sceneBoundingRect());
+            fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
+        }
+    }
 };

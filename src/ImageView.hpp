@@ -57,6 +57,13 @@ public:
     void toggleHScrollbar() noexcept;
     void toggleVScrollbar() noexcept;
     void setAutoReload(bool enabled) noexcept;
+
+    static inline QPixmap rotatePixmap90(const QPixmap &src)
+    {
+        static const QTransform rot90 = QTransform().rotate(90);
+        return src.transformed(rot90, Qt::FastTransformation);
+    }
+
     inline void setAutoFit(bool enabled) noexcept
     {
         m_auto_fit = enabled;

@@ -3,6 +3,7 @@
 #include "Minimap.hpp"
 
 #include <QMap>
+#include <QSize>
 #include <QString>
 
 struct Config
@@ -13,7 +14,8 @@ struct Config
         bool minimap_shown{true};
         bool minimap_auto_hide{true};
         bool minimap_image{true};
-        float minimap_scale{0.2f};
+        float minimap_padding{10.0f};
+        QSize minimap_size{QSize(200, 200)};
         float minimap_image_opacity{0.7f};
         Minimap::Location minimap_location{Minimap::Location::BOTTOM_RIGHT};
         bool minimap_overlay_movable{true};

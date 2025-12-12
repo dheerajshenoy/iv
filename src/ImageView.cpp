@@ -36,6 +36,7 @@ ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m
     m_gview->setContentsMargins(0, 0, 0, 0);
 
     m_minimap = new Minimap(m_gview);
+    m_minimap->setParent(m_gview->viewport()); // flushes to the edge like I want
     m_minimap->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     m_minimap->raise();
 
@@ -88,7 +89,9 @@ ImageView::openFile(const QString &filepath) noexcept
     QtConcurrent::run([this, filepath]() { m_success = render(); }).waitForFinished();
 
     if (m_success)
+    {
         m_gview->fitInView(m_pix_item, Qt::KeepAspectRatio);
+    }
 
     return m_success;
 }
@@ -293,38 +296,38 @@ ImageView::zoomOut() noexcept
 void
 ImageView::rotateClock() noexcept
 {
-    m_rot
-    QTransform t;
-    t.rotate(m_rotation);
-    m_pix_item->setTransform(t);
-    m_pix_item->setTransformOriginPoint(m_pix_item->boundingRect().center());
+    // Save current viewport center in scene coordinates
+    QPointF viewCenter = m_gview->mapToScene(m_gview->viewport()->rect().center());
+
+    // Update rotation state
+    m_rotation = (m_rotation + 90) % 360;
+
+    // Rotate the pixmap item around its center
+    m_pix_item->setTransformOriginPoint(m_pix_item->sceneBoundingRect().center());
     m_pix_item->setRotation(m_rotation);
+    m_gview->setSceneRect(m_pix_item->sceneBoundingRect());
 
-    // Update scene rect to the new rotated bounds
-    m_gscene->setSceneRect(m_pix_item->sceneBoundingRect());
-
-    // Keep the view centered on the pixmap
-    // m_gview->centerOn(m_pix_item);
+    m_gview->centerOn(viewCenter);
     m_minimap->setRotation(m_rotation);
-
-    // Update minimap overlay
     updateMinimapRegion();
 }
 
 void
 ImageView::rotateAnticlock() noexcept
 {
-    m_rotation = (m_rotation - 90) % 360;
+    // Save current viewport center in scene coordinates
+    QPointF viewCenter = m_gview->mapToScene(m_gview->viewport()->rect().center());
 
-    // Rotate around pixmap center
-    m_pix_item->setTransformOriginPoint(m_pix_item->boundingRect().center());
+    // Update rotation state
+    m_rotation = (m_rotation + 270) % 360;
+
+    // Rotate the pixmap item around its center
+    m_pix_item->setTransformOriginPoint(m_pix_item->sceneBoundingRect().center());
     m_pix_item->setRotation(m_rotation);
+    m_gview->setSceneRect(m_pix_item->sceneBoundingRect());
 
-    // Keep the view centered on the pixmap
-    // m_gview->centerOn(m_pix_item);
-
+    m_gview->centerOn(viewCenter);
     m_minimap->setRotation(m_rotation);
-    // Update minimap overlay
     updateMinimapRegion();
 }
 
@@ -562,48 +565,69 @@ ImageView::updateMinimapRegion() noexcept
 void
 ImageView::updateMinimapPosition() noexcept
 {
+    if (!m_minimap || !m_gview)
+        return;
+
+    const int padding = m_minimap->padding();
+
+    // Use the QGraphicsView widget geometry (including frame) for accurate positioning
+    const auto viewport = m_gview->viewport();
+    const int gw        = viewport->width();
+    const int gh        = viewport->height();
+
+    int x = 0;
+    int y = 0;
+
     switch (m_minimap->location())
     {
-
-        case Minimap::Location::BOTTOM_RIGHT:
-            m_minimap->move(m_gview->viewport()->width() - m_minimap->width() - 30,
-                            m_gview->viewport()->height() - m_minimap->height() - 30);
-            break;
         case Minimap::Location::TOP_LEFT:
-            m_minimap->move(30, 30);
+            x = padding;
+            y = padding;
             break;
 
         case Minimap::Location::TOP_RIGHT:
-            m_minimap->move(m_gview->viewport()->width() - m_minimap->width() - 30, 30);
+            x = gw - m_minimap->width() - padding;
+            y = padding;
             break;
 
         case Minimap::Location::BOTTOM_LEFT:
-            m_minimap->move(30, m_gview->viewport()->height() - m_minimap->height() - 30);
+            x = padding;
+            y = gh - m_minimap->height() - padding;
+            break;
+
+        case Minimap::Location::BOTTOM_RIGHT:
+            x = gw - m_minimap->width() - padding;
+            y = gh - m_minimap->height() - padding;
             break;
 
         case Minimap::Location::TOP_CENTER:
-            m_minimap->move((m_gview->viewport()->width() - m_minimap->width()) / 2, 30);
+            x = (gw - m_minimap->width()) / 2;
+            y = padding;
             break;
 
         case Minimap::Location::BOTTOM_CENTER:
-            m_minimap->move((m_gview->viewport()->width() - m_minimap->width()) / 2,
-                            m_gview->viewport()->height() - m_minimap->height() - 30);
+            x = (gw - m_minimap->width()) / 2;
+            y = gh - m_minimap->height() - padding;
             break;
 
         case Minimap::Location::CENTER_LEFT:
-            m_minimap->move(30, (m_gview->viewport()->height() - m_minimap->height()) / 2);
-            break;
-
-        case Minimap::Location::CENTER:
-            m_minimap->move((m_gview->viewport()->width() - m_minimap->width()) / 2,
-                            (m_gview->viewport()->height() - m_minimap->height()) / 2);
+            x = padding;
+            y = (gh - m_minimap->height()) / 2;
             break;
 
         case Minimap::Location::CENTER_RIGHT:
-            m_minimap->move(m_gview->viewport()->width() - m_minimap->width() - 30,
-                            (m_gview->viewport()->height() - m_minimap->height()) / 2);
+            x = gw - m_minimap->width() - padding;
+            y = (gh - m_minimap->height()) / 2;
+            break;
+
+        case Minimap::Location::CENTER:
+            x = (gw - m_minimap->width()) / 2;
+            y = (gh - m_minimap->height()) / 2;
             break;
     }
+
+    // Move the minimap relative to the QGraphicsView widget
+    m_minimap->move(x, y);
 }
 
 void
@@ -825,7 +849,8 @@ ImageView::UpdateFromConfig() noexcept
     m_minimap->setForceHidden(!m_config.ui.minimap_shown);
     m_minimap->setPixmapOpacity(m_config.ui.minimap_image_opacity);
     m_minimap->setLocation(m_config.ui.minimap_location);
-    m_minimap->setMinimapScale(m_config.ui.minimap_scale);
+    m_minimap->setMinimapSize(m_config.ui.minimap_size);
+    m_minimap->setMinimapPadding(m_config.ui.minimap_padding);
 
     m_minimap->setClickable(m_config.ui.minimap_clickable);
     m_overlay_rect->setClickable(m_config.ui.minimap_overlay_movable);
