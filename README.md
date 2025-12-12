@@ -1,17 +1,18 @@
 <p align="center"><img src="resources/icons/hicolor/256x256/apps/iv.png"></p>
 <p align="center">Minimal image viewer</p>
 
+# Features
+
++ Tabbed interface to open multiple images in one window
++ Minimap to preview the entire image and navigate easily (with click to move support)
++ Support for animated images
++ View EXIF metadata \[OPTIONAL\](Enabled if `libexiv2` is found during compilation)
++ Support for AVIF images \[OPTIONAL\](Enabled if `libavif` is found during compilation)
++ Configuration using `TOML` (with auto reload support)
+
 # Demo
 
 ![iv-demo](demo.gif)
-
-# Table of Contents
-
-1. [Supported Image Formats](#supported-image-formats)
-2. [Installation](#installation)
-3. [Usage](#usage)
-4. [Default Keybindings](#default-keybindings)
-5. [Configuration](#configuration)
 
 ## Supported Image Formats
 
@@ -57,30 +58,24 @@ Open images
 iv <path-to-files>
 ```
 
-## Default Keybindings
+## Command Line Options
 
-| Key Combo | Action              |
-|-----------|---------------------|
-| Ctrl+W    | Close File          |
-| o         | Open File           |
-| q         | Open File Location  |
-| =         | Zoom In             |
-| -         | Zoom Out            |
-| >         | Rotate Clockwise    |
-| <         | Rotate Anticlockwise|
-| 1         | Fit to Width        |
-| 2         | Fit to Height       |
-| h         | Scroll Left         |
-| j         | Scroll Down         |
-| k         | Scroll Up           |
-| l         | Scroll Right        |
-| t         | Toggle Tabs         |
-| m         | Toggle Minimap      |
+```bash
+iv [options] [files...]
+```
+Options:
+```
+  -h, --help            Show this help message and exit
+  -v, --version         Show application version and exit
+  -c, --config          Use the specified configuration (TOML) file
+  --commands        Show list of available commands and exit
+```
 
 ## Configuration
 
-Iv is configured using `TOML`. The configuration file is expected at `~/.config/iv/config.toml`.
-A sample configuration file is included in this repository.
+Iv is configured using `TOML`. The configuration file is read from `~/.config/iv/config.toml` by default. You can specify a custom configuration file path using the `-c` or `--config` command line option.
+
+**NOTE: A sample configuration file is included in this repository.**
 
 # CHANGELOG
 
