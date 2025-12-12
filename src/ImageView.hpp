@@ -3,6 +3,7 @@
 #include "Config.hpp"
 #include "GraphicsView.hpp"
 #include "Minimap.hpp"
+#include "PropertiesWidget.hpp"
 
 #include <ImageMagick-7/Magick++.h>
 #include <QDragEnterEvent>
@@ -57,6 +58,7 @@ public:
     void toggleHScrollbar() noexcept;
     void toggleVScrollbar() noexcept;
     void setAutoReload(bool enabled) noexcept;
+    void showFilePropertiesDialog() noexcept;
 
     static inline QPixmap rotatePixmap90(const QPixmap &src)
     {
@@ -190,4 +192,6 @@ private:
     QString m_mimeType;
     QFileSystemWatcher *m_file_watcher{nullptr};
     FitMode m_fit_mode;
+
+    PropertiesWidget *m_prop_widget{nullptr};
 };

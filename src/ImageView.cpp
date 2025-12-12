@@ -36,7 +36,7 @@ ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m
     m_gview->setContentsMargins(0, 0, 0, 0);
 
     m_minimap = new Minimap(m_gview);
-    m_minimap->setParent(m_gview->viewport()); // flushes to the edge like I want
+    // m_minimap->setParent(m_gview->viewport()); // flushes to the edge like I want
     m_minimap->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     m_minimap->raise();
 
@@ -570,10 +570,9 @@ ImageView::updateMinimapPosition() noexcept
 
     const int padding = m_minimap->padding();
 
-    // Use the QGraphicsView widget geometry (including frame) for accurate positioning
-    const auto viewport = m_gview->viewport();
-    const int gw        = viewport->width();
-    const int gh        = viewport->height();
+    const auto viewport = m_gview->viewport()->rect();
+    const int gw        = viewport.width();
+    const int gh        = viewport.height();
 
     int x = 0;
     int y = 0;
@@ -823,7 +822,7 @@ ImageView::getEXIF() noexcept
 
         if (exif.empty())
         {
-            qDebug() << "No EXIF data found in the image.";
+            qInfo() << "No EXIF data found in the image.";
             return exifData;
         }
 
@@ -851,6 +850,7 @@ ImageView::UpdateFromConfig() noexcept
     m_minimap->setLocation(m_config.ui.minimap_location);
     m_minimap->setMinimapSize(m_config.ui.minimap_size);
     m_minimap->setMinimapPadding(m_config.ui.minimap_padding);
+    updateMinimapPosition();
 
     m_minimap->setClickable(m_config.ui.minimap_clickable);
     m_overlay_rect->setClickable(m_config.ui.minimap_overlay_movable);
@@ -908,4 +908,37 @@ void
 ImageView::scrollToBottomEdge() noexcept
 {
     m_vscrollbar->setValue(m_vscrollbar->maximum());
+}
+
+void
+ImageView::showFilePropertiesDialog() noexcept
+{
+    if (!m_prop_widget)
+    {
+        m_prop_widget = new PropertiesWidget(this);
+    }
+
+    QFileInfo fileInfo(m_filepath);
+    // Get properties in QMap<QString, QString> format
+    QMap<QString, QString> properties;
+    properties.insert("File Name", fileInfo.fileName());
+    properties.insert("File Path", fileInfo.absoluteFilePath());
+    properties.insert("File Size", m_filesize);
+    properties.insert("File Type", m_mimeType);
+    properties.insert("Image Dimensions", QString("%1 x %2").arg(width()).arg(height()));
+    properties.insert("Last Modified", fileInfo.lastModified().toString());
+    m_prop_widget->setProperties(properties);
+
+#ifdef HAS_LIBEXIV2
+    QMap<QString, QString> exifData = getEXIF();
+    if (!exifData.isEmpty())
+    {
+        for (auto it = exifData.constBegin(); it != exifData.constEnd(); ++it)
+        {
+            properties.insert(it.key(), it.value());
+        }
+        m_prop_widget->setEXIF(exifData);
+    }
+#endif
+    m_prop_widget->show();
 }

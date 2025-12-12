@@ -17,7 +17,7 @@ class Minimap : public QGraphicsView
 {
     Q_OBJECT
 public:
-    explicit Minimap(QGraphicsView *parent = nullptr) : QGraphicsView(parent)
+    explicit Minimap(QWidget *parent = nullptr) : QGraphicsView(parent)
     {
         // Scene setup
         setScene(m_scene);
@@ -28,7 +28,7 @@ public:
         setFrameStyle(QFrame::NoFrame);
         setBackgroundBrush(Qt::NoBrush);
         setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
-        setStyleSheet("background: transparent");
+        // setStyleSheet("background: transparent");
 
         // Add items to scene
         m_scene->addItem(m_pix_item);
@@ -100,7 +100,7 @@ public:
     void setMinimapSize(QSize size) noexcept
     {
         setFixedSize(size);
-        updateSceneRect(); // adjust the scene rect if needed
+        updateSceneRect();
     }
 
     inline void setLocation(Location loc) noexcept
@@ -139,10 +139,27 @@ private:
 
     void updateSceneRect() noexcept
     {
-        if (!m_pix_item->pixmap().isNull())
-        {
-            m_scene->setSceneRect(m_pix_item->sceneBoundingRect());
-            fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
-        }
+        if (m_pix_item->pixmap().isNull())
+            return;
+
+        m_scene->setSceneRect(m_pix_item->boundingRect());
+
+        QRectF br   = m_pix_item->boundingRect();
+        QSizeF view = viewport()->size();
+
+        qreal sx = view.width() / br.width();
+        qreal sy = view.height() / br.height();
+        qreal s  = qMin(sx, sy); // or max if you want no padding vertically/horizontally
+
+        resetTransform();
+        scale(s, s);
     }
+
+    // void updateSceneRect() noexcept
+    // {
+    //     if (!m_pix_item->pixmap().isNull())
+    //     {
+    //         m_scene->setSceneRect(m_pix_item->boundingRect());
+    //     }
+    // }
 };

@@ -1,7 +1,6 @@
 #include "MainWindow.hpp"
 
 #include "ImageView.hpp"
-#include "PropertiesWidget.hpp"
 #include "toml.hpp"
 
 #include <QActionGroup>
@@ -206,7 +205,6 @@ MainWindow::initGui() noexcept
     m_tab_widget->tabBar()->setStyleSheet("QTabBar { margin: 0; padding: 0; }");
     layout->setSpacing(0);
     m_tab_widget->setStyleSheet("border: 0;");
-    m_tab_widget->setDocumentMode(true);
     m_tab_widget->tabBar()->setVisible(m_config.ui.tabs_shown);
     m_tab_widget->setTabBarAutoHide(m_config.ui.tabs_autohide);
 
@@ -1023,17 +1021,7 @@ MainWindow::ShowFileProperties() noexcept
     if (!m_imgv)
         return;
 
-#ifdef HAS_LIBEXIV2
-    PropertiesWidget *propWidget = new PropertiesWidget();
-
-    const QMap<QString, QString> props = m_imgv->getEXIF();
-    propWidget->setProperties(props);
-    propWidget->show();
-
-#else
-    QMessageBox::warning(this, "EXIF Data Unavailable",
-                         "EXIF data extraction is not available. iv was built without Exiv2 support.");
-#endif
+    m_imgv->showFilePropertiesDialog();
 }
 
 void
