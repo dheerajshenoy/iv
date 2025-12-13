@@ -163,10 +163,12 @@ private:
     void initConnections() noexcept;
     void loadImage(const QImage &img) noexcept;
     bool render() noexcept;
+
 #ifdef HAS_LIBAVIF
     bool renderAvif() noexcept;
     QImage avifToQImage() noexcept;
 #endif
+
     void renderAnimatedImage() noexcept;
     QString humanReadableSize(qint64 bytes) noexcept;
     bool hasMoreThanOneFrame() noexcept;
