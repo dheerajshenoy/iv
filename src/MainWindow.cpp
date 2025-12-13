@@ -369,6 +369,7 @@ MainWindow::OpenFile(const QString &filepath) noexcept
     else
     {
         updateMenuActions(true);
+        updateFileinfoInPanel();
         m_recent_file_manager->addFilePath(filepath);
 
         if (m_config.behavior.auto_reload)
@@ -538,7 +539,7 @@ MainWindow::openFileDialog() noexcept
 void
 MainWindow::updateFileinfoInPanel() noexcept
 {
-    if (!m_imgv || !m_imgv->success())
+    if (!m_imgv)
         return;
 
     const QString &filepath = m_imgv->filePath();
