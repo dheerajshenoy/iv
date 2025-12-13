@@ -505,17 +505,8 @@ ImageView::hideEvent(QHideEvent *e)
 bool
 ImageView::hasMoreThanOneFrame() noexcept
 {
-    std::list<Magick::Image> frames;
-
-    try
-    {
-        Magick::pingImages(&frames, m_filepath.toStdString());
-        return frames.size() > 1;
-    }
-    catch (const Magick::Exception &error)
-    {
-        return false;
-    }
+    const QImageReader reader(m_filepath);
+    return reader.supportsAnimation();
 }
 
 void
