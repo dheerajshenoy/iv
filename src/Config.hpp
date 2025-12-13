@@ -53,6 +53,8 @@ struct Config
         bool save_recent_files{true};
         int recent_files_limit{10};
         bool auto_fit{false};
+        bool keybind_conflict_warning{true};
+        bool copy_transformed_image{false};
     };
 
     QMap<QString, QString> shortcutMap;

@@ -114,6 +114,10 @@ MainWindow::initGui() noexcept
     m_open_containing_folder_action = m_file_menu->addAction(
         QString("Open Containing Folder\t%1").arg(m_config.shortcutMap["open_containing_folder"]), this,
         &MainWindow::OpenContainingFolder);
+    
+    m_edit_menu = menuBar()->addMenu("&Edit");
+    
+    m_copy_
 
     m_file_properties_action =
         m_file_menu->addAction(QString("File Properties\t%1").arg(m_config.shortcutMap["file_properties"]), this,
