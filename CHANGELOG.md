@@ -27,3 +27,4 @@
 - Minimap border
 - Optimize gif loading (using QMovie (large) or preDecoded (small) frames based on size)
 - Fix GIF pause/resume when changing tabs
+- Fix file info not updating when opening images other than GIF
