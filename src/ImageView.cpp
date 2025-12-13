@@ -818,10 +818,7 @@ ImageView::getEXIF() noexcept
         Exiv2::ExifData &exif = image->exifData();
 
         if (exif.empty())
-        {
-            qInfo() << "No EXIF data found in the image.";
-            return exifData;
-        }
+            return {};
 
         for (const auto &datum : exif)
         {
