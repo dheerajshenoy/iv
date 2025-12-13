@@ -78,6 +78,9 @@ ImageView::initConnections() noexcept
         m_gview->centerOn(overlayCenter);
         updateMinimapRegion();
     });
+
+    connect(m_hscrollbar, &QScrollBar::valueChanged, this, &ImageView::updateMinimapRegion);
+    connect(m_vscrollbar, &QScrollBar::valueChanged, this, &ImageView::updateMinimapRegion);
 }
 
 bool
