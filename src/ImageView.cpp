@@ -41,6 +41,24 @@ ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m
     m_minimap->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     m_minimap->raise();
 
+    // Overlay rectangle
+    m_overlay_rect = new OverlayRect();
+    m_overlay_rect->setImageItem(m_pix_item);
+    m_overlay_rect->setMainView(m_minimap);
+    m_minimap->scene()->addItem(m_overlay_rect);
+
+    setLayout(layout);
+    m_hscrollbar = m_gview->horizontalScrollBar();
+    m_vscrollbar = m_gview->verticalScrollBar();
+
+    UpdateFromConfig();
+    initConnections();
+}
+
+void
+ImageView::initConnections() noexcept
+{
+
     // Minimap click to move viewport
     connect(m_minimap, &Minimap::minimapClicked, this, [this](const QPointF &pos)
     {
@@ -60,12 +78,6 @@ ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m
         m_gview->centerOn(overlayCenter);
         updateMinimapRegion();
     });
-
-    setLayout(layout);
-    m_hscrollbar = m_gview->horizontalScrollBar();
-    m_vscrollbar = m_gview->verticalScrollBar();
-
-    UpdateFromConfig();
 }
 
 bool
