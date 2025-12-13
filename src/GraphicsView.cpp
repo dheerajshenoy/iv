@@ -6,7 +6,7 @@
 
 GraphicsView::GraphicsView(QWidget *parent) : QGraphicsView(parent)
 {
-    setRenderHint(QPainter::Antialiasing, false);
+    setRenderHint(QPainter::Antialiasing, true);
     setDragMode(QGraphicsView::ScrollHandDrag);
     setOptimizationFlags(QGraphicsView::DontSavePainterState);
     setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
