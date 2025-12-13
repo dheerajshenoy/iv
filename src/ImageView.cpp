@@ -488,7 +488,7 @@ void
 ImageView::showEvent(QShowEvent *e)
 {
     if (m_isGif)
-        startGifPlayback();
+        resumeGifAnimation();
 
     QWidget::showEvent(e);
 }
@@ -497,9 +497,8 @@ void
 ImageView::hideEvent(QHideEvent *e)
 {
     if (m_isGif)
-    {
-        stopGifAnimation();
-    }
+        pauseGifAnimation();
+
     QWidget::hideEvent(e);
 }
 
@@ -1077,6 +1076,31 @@ ImageView::updateGifFrame(int frameNumber) noexcept
 }
 
 void
+ImageView::pauseGifAnimation() noexcept
+{
+    if (m_movie)
+        m_movie->setPaused(true);
+
+    if (m_gifTimer)
+        m_gifTimer->stop();
+}
+
+void
+ImageView::resumeGifAnimation() noexcept
+{
+    if (m_usePreDecoded)
+    {
+        if (m_gifTimer && !m_gifFrames.isEmpty())
+            m_gifTimer->start(m_gifDelays.value(m_currentFrame, 100));
+    }
+    else
+    {
+        if (m_movie)
+            m_movie->setPaused(false);
+    }
+}
+
+void
 ImageView::stopGifAnimation() noexcept
 {
     // Stop QMovie
@@ -1089,9 +1113,7 @@ ImageView::stopGifAnimation() noexcept
 
     // Stop pre-decoded playback
     if (m_gifTimer)
-    {
         m_gifTimer->stop();
-    }
     m_gifFrames.clear();
     m_gifDelays.clear();
     m_currentFrame  = 0;

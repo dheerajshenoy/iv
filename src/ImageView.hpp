@@ -174,6 +174,8 @@ private:
     void renderWithQMovie() noexcept;
     void renderWithPreDecode() noexcept;
 
+    void pauseGifAnimation() noexcept;
+    void resumeGifAnimation() noexcept;
     void stopGifAnimation() noexcept;
     void startGifAnimation() noexcept;
 
