@@ -1,6 +1,10 @@
-[ui]
+# Image Viewer Application Configuration File
+
+
+[ui] # User Interface settings
+
 tabs_shown = true
-tabs_auto_hide = false
+tabs_auto_hide = true
 tab_bar_position  = "top" # "top", "bottom", "left", "right"
 
 hscrollbar_shown = true
@@ -12,60 +16,95 @@ vscrollbar_auto_hide = true
 menubar_shown = true
 statusbar_shown = true
 
-
 # Minimap settings
-minimap_shown = true
+minimap_shown = false
 minimap_auto_hide = true # Automatically hide minimap when not required
 minimap_image = true # Show image preview in minimap
-minimap_scale = 0.05 # Scale of the minimap relative to the main image
+minimap_size = { width = 200, height = 200 } # Size of the minimap in pixels
 minimap_image_opacity = 0.75
-minimap_location = "top-right" # "top-left", "top-right", "bottom-left", "bottom-right", "bottom-center", "top-center"
-minimap_overlay_movable = true # Allow clicking on the minimap overlay to navigate the main view
+minimap_location = "bottom-right" # "top-left", "top-right", "bottom-left", "bottom-right", "bottom-center", "top-center"
 minimap_clickable = true # Allow clicking on the minimap to navigate the main view
+minimap_border_color = "#0000AAA" # Border color of the minimap
+minimap_border_width = 1
+minimap_padding = 10
 
 # Minimap overlay settings
 minimap_overlay_color = "#44FFFFFF"
 minimap_overlay_border = "#FF5050"
-minimap_overlay_border_width = 50
+minimap_overlay_border_width = 20
+minimap_overlay_movable = true # Allow clicking on the minimap overlay to navigate the main view
 
-[rendering]
+# Statusbar settings
+statusbar_position = "bottom" # "top" or "bottom"
+statusbar_filepath_complete = false # Show full file path in statusbar
+
+[rendering] # Rendering settings
+
 dpr = { "eDP-1" = 1.25, "DP-5" = 1.0, "DP-7" = 1.0 } # Device Pixel Ratio for high-DPI displays; can be a single float value or a map of display names to DPR values
 
-[behavior]
+[behavior] # Behavior settings
+
 auto_reload = true
 config_hot_reload = true
+keybind_conflict_warning = true
+copy_transformed_image = true # Copy the currently viewed (transformed) image when copying instead of the original image
 
-[keybindings]
-open_file = "O"
-close_file = "Ctrl+W"
-toggle_tabs = "Ctrl+T"
-toggle_fullscreen = "F11"
-open_file_location = "Ctrl+L"
+[focus_mode] # Focus mode settings
+
+statusbar_shown = false
+menubar_shown = false
+tabs_shown = false
+hscrollbar_shown = false
+vscrollbar_shown = false
+minimap_shown = false
+
+[keybindings] # Keybindings settings
+
+### File keybindings
+open_file = "o"
+close_file = "Ctrl+w"
+reload_file = "F5"
+open_containing_folder = "Ctrl+Shift+o"
+
+### Copy keybindings
+copy_path = "Ctrl+Shift+c"
+copy_dir = "Ctrl+Shift+d"
+copy_image = "Ctrl+Shift+i"
+copy_viewport = "Ctrl+Shift+v"
+
+reset_view = "r"
+
+### Zoom keybindings
 zoom_in = "="
 zoom_out = "-"
+zoom_reset = "0"
+
+### Rotation keybindings
 rotate_clock = ">"
 rotate_anticlock = "<"
-fit_width = "Ctrl+Shift+W"
-fit_height = "Ctrl+Shift+H"
-scroll_left = "H"
-scroll_right = "L"
-scroll_up = "K"
-scroll_down = "J"
-toggle_minimap = "M"
-flip_left = "Ctrl+H"
-flip_right = "Ctrl+L"
-flip_up = "Ctrl+K"
-flip_down = "Ctrl+J"
-reload_file = "F5"
-open_containing_folder = "Ctrl+O"
-toggle_menubar = "Ctrl+Shift+M"
 
-# Go to the edges of the image
-left_edge = "Shift+H"
-right_edge = "Shift+L"
-top_edge = "Shift+K"
-bottom_edge = "Shift+J"
+### Scroll keybindings
+scroll_left = "h"
+scroll_right = "l"
+scroll_up = "k"
+scroll_down = "j"
 
+### Flip keybindings
+flip_horizontal = "Ctrl+h"
+flip_vertical = "Ctrl+v"
+
+### Fit keybindings
+auto_fit = "Ctrl+Shift+T"
+fit_width = "Ctrl+Shift+w"
+fit_height = "Ctrl+Shift+h"
+
+### Edge keybindings
+left_edge = "Shift+h"
+right_edge = "Shift+l"
+top_edge = "Shift+k"
+bottom_edge = "Shift+j"
+
+### Tab keybindings
 tab_next = "Ctrl+Tab"
 tab_previous = "Ctrl+Shift+Tab"
 tab_1 = "Alt+1"
@@ -79,4 +118,10 @@ tab_8 = "Alt+8"
 tab_9 = "Alt+9"
 tab_last = "Alt+0"
 
-
+### UI toggle keybindings
+toggle_tabs = "Ctrl+t"
+toggle_fullscreen = "F11"
+toggle_minimap = "m"
+toggle_menubar = "Ctrl+Shift+m"
+toggle_statusbar = "Ctrl+Shift+s"
+toggle_focus_mode = "Ctrl+Space"
