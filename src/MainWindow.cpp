@@ -125,8 +125,10 @@ MainWindow::initGui() noexcept
         m_file_menu->addAction(QString("Exit\t%1").arg(m_config.shortcutMap["exit"]), this, &MainWindow::close);
 
     m_zoom_menu = m_view_menu->addMenu("Zoom");
+
     m_zoom_in_action =
         m_zoom_menu->addAction(QString("In\t%1").arg(m_config.shortcutMap["zoom_in"]), this, &MainWindow::ZoomIn);
+
     m_zoom_out_action =
         m_zoom_menu->addAction(QString("Out\t%1").arg(m_config.shortcutMap["zoom_out"]), this, &MainWindow::ZoomOut);
 
@@ -234,7 +236,7 @@ MainWindow::initDefaultKeybinds() noexcept
     m_config.shortcutMap["Ctrl+Shift+M"] = "toggle_menubar";
     m_config.shortcutMap["Ctrl+W"]       = "close_file";
     m_config.shortcutMap["o"]            = "open_file";
-    m_config.shortcutMap["q"]            = "open_file_location";
+    m_config.shortcutMap["q"]            = "open_containing_folder";
     m_config.shortcutMap["="]            = "zoom_in";
     m_config.shortcutMap["-"]            = "zoom_out";
     m_config.shortcutMap[">"]            = "rotate_clock";
@@ -784,12 +786,6 @@ MainWindow::initCommandMap() noexcept
         ToggleMenubar();
     };
 
-    m_commandMap["open_file_location"] = [this]()
-    {
-        QString filedir = qobject_cast<ImageView *>(m_tab_widget->currentWidget())->fileDir();
-        QDesktopServices::openUrl(QUrl(filedir));
-    };
-
     m_commandMap["zoom_in"] = [this]()
     {
         ZoomIn();
@@ -808,10 +804,12 @@ MainWindow::initCommandMap() noexcept
     {
         RotateClock();
     };
+
     m_commandMap["rotate_anticlock"] = [this]()
     {
         RotateAnticlock();
     };
+
     m_commandMap["fit_width"] = [this]()
     {
         FitWidth();
