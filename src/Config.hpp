@@ -39,6 +39,10 @@ struct Config
 
         bool statusbar_shown{true};
         bool menubar_shown{true};
+
+        QString statusbar_position{"bottom"};
+        int statusbar_padding{5};
+        bool statusbar_filepath_complete{true};
     };
 
     struct Rendering

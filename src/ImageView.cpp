@@ -708,12 +708,12 @@ ImageView::getMimeType(const QString &filePath) noexcept
 void
 ImageView::loadImage(const QImage &img) noexcept
 {
-    m_pix = QPixmap::fromImage(img);
+    static QPixmap pix = QPixmap::fromImage(img);
 
-    m_pix.setDevicePixelRatio(m_dpr);
-    m_pix_item->setPixmap(m_pix);
+    pix.setDevicePixelRatio(m_dpr);
+    m_pix_item->setPixmap(pix);
+    m_minimap->setPixmap(pix);
 
-    m_minimap->setPixmap(m_pix);
     if (!m_config.ui.minimap_image)
         m_minimap->showOverlayOnly(true);
 
@@ -728,8 +728,9 @@ ImageView::setDPR(float dpr) noexcept
     if (m_pix_item->pixmap().isNull())
         return;
 
-    m_pix.setDevicePixelRatio(m_dpr);
-    m_pix_item->setPixmap(m_pix);
+    static QPixmap pix = m_pix_item->pixmap();
+    pix.setDevicePixelRatio(m_dpr);
+    m_pix_item->setPixmap(pix);
 }
 
 bool
@@ -887,7 +888,7 @@ ImageView::UpdateFromConfig() noexcept
     setOverlayRectBorderWidth(m_config.ui.minimap_overlay_border_width);
     setOverlayRectBorderColor(QColor::fromString(m_config.ui.minimap_overlay_border_color));
 
-    m_minimap->setPixmap(m_pix);
+    m_minimap->setPixmap(m_pix_item->pixmap());
     if (!m_config.ui.minimap_image)
         m_minimap->showOverlayOnly(true);
 
@@ -952,6 +953,8 @@ ImageView::showFilePropertiesDialog() noexcept
 
     PropertiesWidget::Properties properties;
 
+    static const QPixmap pix = m_pix_item->pixmap();
+
     properties = {
         QPair("Name", fileInfo.fileName()),
         QPair("Path", fileInfo.absoluteFilePath()),
@@ -962,8 +965,8 @@ ImageView::showFilePropertiesDialog() noexcept
         QPair("Readable", fileInfo.isReadable() ? "Yes" : "No"),
         QPair("Writable", fileInfo.isWritable() ? "Yes" : "No"),
         QPair("Hidden", fileInfo.isHidden() ? "Yes" : "No"),
-        QPair("Dimensions", QString("%1 x %2").arg(m_pix.width()).arg(m_pix.height())),
-        QPair("DPI", QString("%1 x %2").arg(m_pix.logicalDpiX()).arg(m_pix.logicalDpiY())),
+        QPair("Dimensions", QString("%1 x %2").arg(pix.width()).arg(pix.height())),
+        QPair("DPI", QString("%1 x %2").arg(pix.logicalDpiX()).arg(pix.logicalDpiY())),
     };
 
     m_prop_widget->setProperties(properties);

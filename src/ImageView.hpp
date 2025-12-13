@@ -224,7 +224,6 @@ private:
     QString m_filepath, m_filesize;
     float m_zoomFactor{1.25};
     int m_rotation{0};
-    QPixmap m_pix;
     QScrollBar *m_vscrollbar, *m_hscrollbar;
     QMovie *m_movie{nullptr};
     Minimap *m_minimap{nullptr};

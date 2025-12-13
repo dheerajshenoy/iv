@@ -92,8 +92,18 @@ MainWindow::initGui() noexcept
 {
 
     QVBoxLayout *layout = new QVBoxLayout();
-    layout->addWidget(m_tab_widget);
-    layout->addWidget(m_panel);
+
+    if (m_config.ui.statusbar_position == "top")
+    {
+        layout->addWidget(m_panel);
+        layout->addWidget(m_tab_widget);
+    }
+    else
+    {
+        layout->addWidget(m_tab_widget);
+        layout->addWidget(m_panel);
+    }
+
     QWidget *widget = new QWidget();
     widget->setLayout(layout);
     setCentralWidget(widget);
@@ -378,16 +388,21 @@ MainWindow::OpenFile(const QString &filepath) noexcept
         return;
     }
 
+    if (QFileInfo(fp).isRelative() && m_config.ui.statusbar_filepath_complete)
+    {
+        fp = QDir::current().absoluteFilePath(fp);
+    }
+
     if (fp.startsWith("~"))
         fp = fp.replace(0, 1, QString::fromLocal8Bit(getenv("HOME")));
 
     m_imgv = new ImageView(m_config, m_tab_widget);
 
-    bool success = m_imgv->openFile(filepath);
+    bool success = m_imgv->openFile(fp);
     if (!success)
     {
-        qWarning() << "Failed to open file:" << filepath;
-        QMessageBox::warning(this, "Open File Error", QString("Failed to open file:\n%1").arg(filepath));
+        qWarning() << "Failed to open file:" << fp;
+        QMessageBox::warning(this, "Open File Error", QString("Failed to open file:\n%1").arg(fp));
 
         m_imgv->deleteLater();
         m_imgv = nullptr;
@@ -396,7 +411,8 @@ MainWindow::OpenFile(const QString &filepath) noexcept
     {
         updateMenuActions(true);
         updateFileinfoInPanel();
-        m_recent_file_manager->addFilePath(filepath);
+
+        m_recent_file_manager->addFilePath(fp);
 
         if (m_config.behavior.auto_reload)
             m_imgv->setAutoReload(true);
@@ -575,8 +591,18 @@ MainWindow::updateFileinfoInPanel() noexcept
     if (!m_imgv)
         return;
 
-    const QString &filepath = m_imgv->filePath();
-    const QSize &size       = m_imgv->size();
+    QString filepath = m_imgv->filePath();
+
+    if (m_config.ui.statusbar_filepath_complete && QFileInfo(filepath).isRelative())
+    {
+        filepath = QDir::current().absoluteFilePath(filepath);
+    }
+    else
+    {
+        filepath = QFileInfo(filepath).fileName();
+    }
+
+    const QSize &size = m_imgv->size();
     m_panel->setFileName(filepath);
     m_panel->setImageSize(size.width(), size.height());
     m_panel->setFileSize(m_imgv->fileSize());
@@ -659,6 +685,9 @@ MainWindow::initConfig() noexcept
         m_config.ui.minimap_overlay_color        = ui["minimap_overlay_color"].value_or("#55FF0000");
         m_config.ui.minimap_overlay_border_color = ui["minimap_overlay_border"].value_or("#5500FF00");
         m_config.ui.minimap_overlay_border_width = ui["minimap_overlay_border_width"].value_or(0);
+
+        m_config.ui.statusbar_position          = ui["statusbar_position"].value_or("bottom");
+        m_config.ui.statusbar_filepath_complete = ui["statusbar_filepath_complete"].value_or(true);
     }
 
     auto focus_mode = toml["focus_mode"];
