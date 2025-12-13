@@ -16,6 +16,7 @@ class PropertiesWidget : public QWidget
 {
     Q_OBJECT
 public:
+    using Properties = QVector<QPair<QString, QString>>;
     explicit PropertiesWidget(QWidget *parent = nullptr) : QWidget(parent)
     {
         setAttribute(Qt::WA_DeleteOnClose);
@@ -31,7 +32,7 @@ public:
         setLayout(layout);
     }
 
-    void setProperties(const QMap<QString, QString> &properties)
+    void setProperties(const Properties &properties)
     {
         m_treeWidget->clear();
 
@@ -43,8 +44,8 @@ public:
         for (auto it = properties.constBegin(); it != properties.constEnd(); ++it)
         {
             QTreeWidgetItem *item = new QTreeWidgetItem(propRoot);
-            item->setText(0, it.key());
-            item->setText(1, it.value());
+            item->setText(0, it->first);
+            item->setText(1, it->second);
         }
 
 #ifndef HAS_LIBEXIV2

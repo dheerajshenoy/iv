@@ -918,13 +918,23 @@ ImageView::showFilePropertiesDialog() noexcept
 
     QFileInfo fileInfo(m_filepath);
     // Get properties in QMap<QString, QString> format
-    QMap<QString, QString> properties;
-    properties.insert("File Name", fileInfo.fileName());
-    properties.insert("File Path", fileInfo.absoluteFilePath());
-    properties.insert("File Size", m_filesize);
-    properties.insert("File Type", m_mimeType);
-    properties.insert("Image Dimensions", QString("%1 x %2").arg(width()).arg(height()));
-    properties.insert("Last Modified", fileInfo.lastModified().toString());
+
+    PropertiesWidget::Properties properties;
+
+    properties = {
+        QPair("Name", fileInfo.fileName()),
+        QPair("Path", fileInfo.absoluteFilePath()),
+        QPair("Size", m_filesize),
+        QPair("Type", m_mimeType),
+        QPair("Modified", fileInfo.lastModified().toString()),
+        QPair("Accessed", fileInfo.lastRead().toString()),
+        QPair("Readable", fileInfo.isReadable() ? "Yes" : "No"),
+        QPair("Writable", fileInfo.isWritable() ? "Yes" : "No"),
+        QPair("Hidden", fileInfo.isHidden() ? "Yes" : "No"),
+        QPair("Dimensions", QString("%1 x %2").arg(m_pix.width()).arg(m_pix.height())),
+        QPair("DPI", QString("%1 x %2").arg(m_pix.logicalDpiX()).arg(m_pix.logicalDpiY())),
+    };
+
     m_prop_widget->setProperties(properties);
 
 #ifdef HAS_LIBEXIV2
@@ -933,7 +943,7 @@ ImageView::showFilePropertiesDialog() noexcept
     {
         for (auto it = exifData.constBegin(); it != exifData.constEnd(); ++it)
         {
-            properties.insert(it.key(), it.value());
+            properties.append(QPair(it.key(), it.value()));
         }
         m_prop_widget->setEXIF(exifData);
     }
