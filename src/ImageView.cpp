@@ -145,10 +145,10 @@ ImageView::openFile(const QString &filepath) noexcept
 QImage
 ImageView::magickImageToQImage(Magick::Image &image) noexcept
 {
-    const int width  = image.columns();
-    const int height = image.rows();
+    const int &width  = image.columns();
+    const int &height = image.rows();
 
-    const bool hasAlpha            = image.alpha();
+    const bool &hasAlpha           = image.alpha();
     const std::string format       = hasAlpha ? "RGBA" : "RGB";
     const QImage::Format imgFormat = hasAlpha ? QImage::Format_RGBA8888 : QImage::Format_RGB888;
 
@@ -166,10 +166,8 @@ ImageView::magickImageToQImage(Magick::Image &image) noexcept
         return QImage();
     }
 
-    QImage img(buffer.data(), width, height, bytesPerLine, imgFormat);
-
     // Must copy the image data, as the buffer will go out of scope
-    return img.copy();
+    return QImage(buffer.data(), width, height, bytesPerLine, imgFormat).copy();
 }
 
 #ifdef HAS_LIBAVIF
@@ -318,7 +316,7 @@ ImageView::render() noexcept
         renderAnimatedImage();
     else
     {
-        QImage img = magickImageToQImage(image);
+        const QImage &img = magickImageToQImage(image);
         loadImage(img);
     }
 
@@ -360,7 +358,7 @@ ImageView::setRotation(int angle) noexcept
 {
 
     // Save current viewport center in scene coordinates
-    QPointF viewCenter = m_gview->mapToScene(m_gview->viewport()->rect().center());
+    const QPointF &viewCenter = m_gview->mapToScene(m_gview->viewport()->rect().center());
 
     // Update rotation state
     m_rotation = angle % 360;
@@ -403,7 +401,6 @@ ImageView::fitHeight() noexcept
 
     t.scale(scaleFactor, scaleFactor);
     m_pix_item->setTransform(t);
-    // m_gview->centerOn(m_pix_item);
 }
 
 void
@@ -420,7 +417,6 @@ ImageView::fitWidth() noexcept
 
     t.scale(scaleFactor, scaleFactor);
     m_pix_item->setTransform(t);
-    // m_gview->centerOn(m_pix_item);
 }
 
 void
@@ -428,7 +424,6 @@ ImageView::fitWindow() noexcept
 {
     m_fit_mode = FitMode::WINDOW;
     m_gview->fitInView(m_pix_item, Qt::KeepAspectRatio);
-    // m_gview->centerOn(m_pix_item);
 }
 
 void
@@ -458,8 +453,8 @@ ImageView::scrollDown() noexcept
 void
 ImageView::flipLeftRight() noexcept
 {
-    QPixmap pix  = m_pix_item->pixmap();
-    QTransform t = m_pix_item->transform();
+    const QPixmap &pix = m_pix_item->pixmap();
+    QTransform t       = m_pix_item->transform();
     t.scale(-1, 1);
     m_pix_item->setTransform(t);
     m_minimap->setTransform(t);
@@ -468,8 +463,8 @@ ImageView::flipLeftRight() noexcept
 void
 ImageView::flipUpDown() noexcept
 {
-    QPixmap pix  = m_pix_item->pixmap();
-    QTransform t = m_pix_item->transform();
+    const QPixmap &pix = m_pix_item->pixmap();
+    QTransform t       = m_pix_item->transform();
     t.scale(1, -1);
     m_pix_item->setTransform(t);
     m_minimap->setTransform(t);
@@ -716,7 +711,7 @@ ImageView::getMimeType(const QString &filePath) noexcept
 void
 ImageView::loadImage(const QImage &img) noexcept
 {
-    static QPixmap pix = QPixmap::fromImage(img);
+    QPixmap pix = QPixmap::fromImage(img);
 
     pix.setDevicePixelRatio(m_dpr);
     m_pix_item->setPixmap(pix);
@@ -736,7 +731,7 @@ ImageView::setDPR(float dpr) noexcept
     if (m_pix_item->pixmap().isNull())
         return;
 
-    static QPixmap pix = m_pix_item->pixmap();
+    QPixmap pix = m_pix_item->pixmap();
     pix.setDevicePixelRatio(m_dpr);
     m_pix_item->setPixmap(pix);
 }
@@ -961,7 +956,7 @@ ImageView::showFilePropertiesDialog() noexcept
 
     PropertiesWidget::Properties properties;
 
-    static const QPixmap pix = m_pix_item->pixmap();
+    const QPixmap &pix = m_pix_item->pixmap();
 
     properties = {
         QPair("Name", fileInfo.fileName()),
@@ -1013,7 +1008,7 @@ ImageView::renderWithQMovie() noexcept
     m_movie->jumpToFrame(0);
     if (m_movie->isValid())
     {
-        QPixmap frame = m_movie->currentPixmap();
+        const QPixmap &frame = m_movie->currentPixmap();
         m_pix_item->setPixmap(frame);
         m_minimap->setPixmap(frame);
         if (!m_config.ui.minimap_image)
@@ -1118,7 +1113,7 @@ ImageView::updateGifFrame(int frameNumber) noexcept
         if (!m_movie)
             return;
 
-        QPixmap frame = m_movie->currentPixmap();
+        const QPixmap &frame = m_movie->currentPixmap();
         m_pix_item->setPixmap(frame);
         m_minimap->setPixmap(frame);
 
