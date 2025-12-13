@@ -694,7 +694,8 @@ ImageView::setDPR(float dpr) noexcept
     if (m_pix_item->pixmap().isNull())
         return;
 
-    render();
+    m_pix.setDevicePixelRatio(m_dpr);
+    m_pix_item->setPixmap(m_pix);
 }
 
 bool
