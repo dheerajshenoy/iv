@@ -113,22 +113,30 @@ ImageView::openFile(const QString &filepath) noexcept
     {
         stopGifAnimation();
 
+        m_success = render();
+
+        if (m_success)
+            m_gview->fitInView(m_pix_item, Qt::KeepAspectRatio);
+
+        return m_success;
+
         // Load static image asynchronously without blocking
-        QFuture<bool> future = QtConcurrent::run([this, filepath]() { return render(); });
-
-        QFutureWatcher<bool> *watcher = new QFutureWatcher<bool>(this);
-        connect(watcher, &QFutureWatcher<bool>::finished, this, [this, watcher]()
-        {
-            m_success = watcher->result();
-            if (m_success)
-            {
-                m_gview->fitInView(m_pix_item, Qt::KeepAspectRatio);
-            }
-            watcher->deleteLater();
-        });
-        watcher->setFuture(future);
-
-        return true; // Return immediately for async loading
+        // QFuture<bool> future = QtConcurrent::run([this, filepath]() { return render(); });
+        //
+        // QFutureWatcher<bool> *watcher = new QFutureWatcher<bool>(this);
+        //
+        // connect(watcher, &QFutureWatcher<bool>::finished, this, [this, watcher]()
+        // {
+        //     m_success = watcher->result();
+        //     if (m_success)
+        //     {
+        //         m_gview->fitInView(m_pix_item, Qt::KeepAspectRatio);
+        //     }
+        //     watcher->deleteLater();
+        // });
+        //
+        // watcher->setFuture(future);
+        // return true; // Return immediately for async loading
     }
 
     return m_success;
