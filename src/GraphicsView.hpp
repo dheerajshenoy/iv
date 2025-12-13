@@ -24,11 +24,13 @@ public:
 
     void zoomIn() noexcept;
     void zoomOut() noexcept;
+    void zoomReset() noexcept;
 
 signals:
     void openFilesRequested(const QList<QString> &files);
     void zoomInRequested();
     void zoomOutRequested();
+    void zoomResetRequested();
 
 protected:
     bool event(QEvent *event) override

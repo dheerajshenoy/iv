@@ -48,11 +48,9 @@ ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m
         updateMinimapRegion();
     });
 
-    // Overlay rectangle
-    m_overlay_rect = new OverlayRect();
-    m_overlay_rect->setImageItem(m_pix_item);
-    m_overlay_rect->setMainView(m_minimap);
-    m_minimap->scene()->addItem(m_overlay_rect);
+    connect(m_gview, &GraphicsView::zoomInRequested, this, &ImageView::zoomIn);
+    connect(m_gview, &GraphicsView::zoomOutRequested, this, &ImageView::zoomOut);
+    connect(m_gview, &GraphicsView::zoomResetRequested, this, &ImageView::zoomReset);
 
     // Overlay moved handler
     connect(m_overlay_rect, &OverlayRect::overlayMoved, this, [this]()
@@ -314,6 +312,13 @@ void
 ImageView::zoomOut() noexcept
 {
     m_gview->zoomOut();
+    updateMinimapRegion();
+}
+
+void
+ImageView::zoomReset() noexcept
+{
+    m_gview->zoomReset();
     updateMinimapRegion();
 }
 

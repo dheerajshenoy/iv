@@ -60,6 +60,13 @@ GraphicsView::zoomOut() noexcept
     scale(1.0 / m_zoomFactor, 1.0 / m_zoomFactor);
 }
 
+void
+GraphicsView::zoomReset() noexcept
+{
+    scale(1.0, 1.0);
+    fitInView(sceneRect(), Qt::KeepAspectRatio);
+}
+
 bool
 GraphicsView::nativeGestureEvent(QNativeGestureEvent *event) noexcept
 {

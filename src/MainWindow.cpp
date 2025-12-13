@@ -130,6 +130,9 @@ MainWindow::initGui() noexcept
     m_zoom_out_action =
         m_zoom_menu->addAction(QString("Out\t%1").arg(m_config.shortcutMap["zoom_out"]), this, &MainWindow::ZoomOut);
 
+    m_zoom_reset_action = m_zoom_menu->addAction(QString("Reset\t%1").arg(m_config.shortcutMap["zoom_reset"]), this,
+                                                 &MainWindow::ZoomReset);
+
     m_rotate_menu         = m_view_menu->addMenu("Rotate");
     m_rotate_clock_action = m_rotate_menu->addAction(QString("Clockwise\t%1").arg(m_config.shortcutMap["rotate_clock"]),
                                                      this, &MainWindow::RotateClock);
@@ -401,6 +404,13 @@ MainWindow::ZoomOut() noexcept
 {
     if (m_imgv)
         m_imgv->zoomOut();
+}
+
+void
+MainWindow::ZoomReset() noexcept
+{
+    if (m_imgv)
+        m_imgv->zoomReset();
 }
 
 void
@@ -781,6 +791,12 @@ MainWindow::initCommandMap() noexcept
     {
         ZoomOut();
     };
+
+    m_commandMap["zoom_reset"] = [this]()
+    {
+        ZoomReset();
+    };
+
     m_commandMap["rotate_clock"] = [this]()
     {
         RotateClock();

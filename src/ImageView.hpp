@@ -43,6 +43,7 @@ public:
     void scrollToBottomEdge() noexcept;
     void zoomIn() noexcept;
     void zoomOut() noexcept;
+    void zoomReset() noexcept;
     void rotateClock() noexcept;
     void rotateAnticlock() noexcept;
     void fitWindow() noexcept;
@@ -159,6 +160,7 @@ protected:
     void dropEvent(QDropEvent *e) override;
 
 private:
+    void initConnections() noexcept;
     void loadImage(const QImage &img) noexcept;
     bool render() noexcept;
 #ifdef HAS_LIBAVIF

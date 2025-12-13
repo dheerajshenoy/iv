@@ -46,6 +46,7 @@ public:
     void CloseFile() noexcept;
     void ZoomIn() noexcept;
     void ZoomOut() noexcept;
+    void ZoomReset() noexcept;
     void RotateClock() noexcept;
     void RotateAnticlock() noexcept;
     void FitWidth() noexcept;
@@ -110,6 +111,7 @@ private:
     QAction *m_exit_action{nullptr};
     QAction *m_zoom_in_action{nullptr};
     QAction *m_zoom_out_action{nullptr};
+    QAction *m_zoom_reset_action{nullptr};
     QAction *m_rotate_clock_action{nullptr};
     QAction *m_rotate_anticlock_action{nullptr};
     QAction *m_fit_width_action{nullptr};
