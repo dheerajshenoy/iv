@@ -481,17 +481,6 @@ ImageView::renderAnimatedImage() noexcept
         // Pre-decode for small files
         renderWithPreDecode();
     }
-    // if (m_movie)
-    // {
-    //     m_movie->stop();
-    //     disconnect(m_movie, &QMovie::frameChanged, this, &ImageView::updateGifFrame);
-    //     m_movie->deleteLater();
-    //     m_movie = nullptr;
-    // }
-    // m_isGif = true;
-    // m_movie = new QMovie(m_filepath, QByteArray(), this);
-    // connect(m_movie, &QMovie::frameChanged, this, &ImageView::updateGifFrame);
-    // m_movie->start();
 }
 
 void
