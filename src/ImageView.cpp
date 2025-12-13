@@ -546,9 +546,16 @@ ImageView::updateMinimapRegion() noexcept
     }
 
     // Hide minimap if the entire image fits in the viewport
-    constexpr qreal EPS = 1.0;
-    bool fullyVisible   = (viewRect.left() <= imageRect.left() + EPS && viewRect.top() <= imageRect.top() + EPS &&
-                         viewRect.right() >= imageRect.right() - EPS && viewRect.bottom() >= imageRect.bottom() - EPS);
+    const QPolygonF viewportPoly = m_gview->mapToScene(m_gview->viewport()->rect());
+    bool fullyVisible            = true;
+    for (const QPointF &pt : viewportPoly)
+    {
+        if (imageRect.contains(pt))
+        {
+            fullyVisible = false;
+            break;
+        }
+    }
     m_minimap->setVisible(!fullyVisible);
 }
 
