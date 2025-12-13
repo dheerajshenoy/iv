@@ -127,6 +127,8 @@ private:
     QAction *m_toggle_hscrollbar_action{nullptr};
     QAction *m_toggle_vscrollbar_action{nullptr};
     QAction *m_file_properties_action{nullptr};
+    QAction *m_flip_horizontal_action{nullptr};
+    QAction *m_flip_vertical_action{nullptr};
 
     TabWidget *m_tab_widget{new TabWidget()};
     Panel *m_panel{new Panel()};

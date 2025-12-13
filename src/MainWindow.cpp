@@ -153,6 +153,13 @@ MainWindow::initGui() noexcept
     m_auto_fit_action->setCheckable(true);
     m_auto_fit_action->setChecked(m_config.behavior.auto_fit);
 
+    m_flip_menu = m_view_menu->addMenu("Flip");
+
+    m_flip_horizontal_action = m_flip_menu->addAction(
+        QString("Horizontal\t%1").arg(m_config.shortcutMap["flip_horizontal"]), [&]() { Flip(Direction::LEFT); });
+    m_flip_vertical_action = m_flip_menu->addAction(QString("Vertical\t%1").arg(m_config.shortcutMap["flip_vertical"]),
+                                                    [&]() { Flip(Direction::UP); });
+
     m_toggle_menu           = m_view_menu->addMenu("Toggle");
     m_toggle_minimap_action = m_toggle_menu->addAction(
         QString("Minimap\t%1").arg(m_config.shortcutMap["toggle_minimap"]), this, &MainWindow::ToggleMinimap);
@@ -855,24 +862,14 @@ MainWindow::initCommandMap() noexcept
         ToggleMinimap();
     };
 
-    m_commandMap["flip_left"] = [this]()
+    m_commandMap["flip_horizontal"] = [this]()
     {
         Flip(Direction::LEFT);
     };
 
-    m_commandMap["flip_right"] = [this]()
-    {
-        Flip(Direction::RIGHT);
-    };
-
-    m_commandMap["flip_up"] = [this]()
+    m_commandMap["flip_vertical"] = [this]()
     {
         Flip(Direction::UP);
-    };
-
-    m_commandMap["flip_down"] = [this]()
-    {
-        Flip(Direction::DOWN);
     };
 
     // Command to switch to tabs 0-9 and also next and prev tab
@@ -995,6 +992,7 @@ MainWindow::updateMenuActions(bool state) noexcept
     m_toggle_auto_reload_action->setEnabled(state);
     m_open_containing_folder_action->setEnabled(state);
     m_file_properties_action->setEnabled(state);
+    m_flip_menu->setEnabled(state);
 }
 
 void
