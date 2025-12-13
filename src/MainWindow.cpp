@@ -84,10 +84,6 @@ MainWindow::construct() noexcept
     initConfig();
     initConnections();
 
-    m_file_menu = menuBar()->addMenu("&File");
-    m_view_menu = menuBar()->addMenu("&View");
-    m_help_menu = menuBar()->addMenu("&Help");
-
     initGui();
 }
 
@@ -102,6 +98,11 @@ MainWindow::initGui() noexcept
     widget->setLayout(layout);
     setCentralWidget(widget);
 
+    m_file_menu = menuBar()->addMenu("&File");
+    m_edit_menu = menuBar()->addMenu("&Edit");
+    m_view_menu = menuBar()->addMenu("&View");
+    m_help_menu = menuBar()->addMenu("&Help");
+
     m_open_file_action = m_file_menu->addAction(QString("Open File\t%1").arg(m_config.shortcutMap["open_file"]), this,
                                                 &MainWindow::openFileDialog);
 
@@ -113,8 +114,6 @@ MainWindow::initGui() noexcept
     m_open_containing_folder_action = m_file_menu->addAction(
         QString("Open Containing Folder\t%1").arg(m_config.shortcutMap["open_containing_folder"]), this,
         &MainWindow::OpenContainingFolder);
-
-    m_edit_menu = menuBar()->addMenu("&Edit");
 
     m_copy_menu = m_edit_menu->addMenu("Copy");
 

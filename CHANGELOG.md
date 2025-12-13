@@ -28,3 +28,5 @@
 - Optimize gif loading (using QMovie (large) or preDecoded (small) frames based on size)
 - Fix GIF pause/resume when changing tabs
 - Fix file info not updating when opening images other than GIF
+- Add copy path/directory/image/viewport commands and menu options
+- Add `copy_transformed_image` option to copy the currently viewed image with all transformations applied (like rotation, flip)
