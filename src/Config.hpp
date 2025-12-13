@@ -46,6 +46,16 @@ struct Config
         std::variant<float, QMap<QString, float>> dpr{};
     };
 
+    struct FocusMode
+    {
+        bool statusbar_shown{false};
+        bool menubar_shown{false};
+        bool minimap_shown{false};
+        bool hscrollbar_shown{false};
+        bool vscrollbar_shown{false};
+        bool tabs_shown{false};
+    };
+
     struct Behavior
     {
         bool auto_reload{false};
@@ -61,4 +71,5 @@ struct Config
     UI ui{};
     Rendering rendering{};
     Behavior behavior{};
+    FocusMode focus_mode{};
 };

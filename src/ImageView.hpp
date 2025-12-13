@@ -153,6 +153,16 @@ public:
     QImage transformedImage() const noexcept;
     QImage viewportImage() const noexcept;
 
+    inline void setHScrollBarVisible(bool visible) noexcept
+    {
+        m_gview->setHorizontalScrollBarPolicy(visible ? Qt::ScrollBarAsNeeded : Qt::ScrollBarAlwaysOff);
+    }
+
+    inline void setVScrollBarVisible(bool visible) noexcept
+    {
+        m_gview->setVerticalScrollBarPolicy(visible ? Qt::ScrollBarAsNeeded : Qt::ScrollBarAlwaysOff);
+    }
+
     void resetView() noexcept;
 
 #ifdef HAS_LIBEXIV2

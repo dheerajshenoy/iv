@@ -661,6 +661,18 @@ MainWindow::initConfig() noexcept
         m_config.ui.minimap_overlay_border_width = ui["minimap_overlay_border_width"].value_or(0);
     }
 
+    auto focus_mode = toml["focus_mode"];
+
+    if (focus_mode)
+    {
+        m_config.focus_mode.statusbar_shown  = focus_mode["statusbar_shown"].value_or(false);
+        m_config.focus_mode.menubar_shown    = focus_mode["menubar_shown"].value_or(false);
+        m_config.focus_mode.minimap_shown    = focus_mode["minimap_shown"].value_or(false);
+        m_config.focus_mode.hscrollbar_shown = focus_mode["hscrollbar_shown"].value_or(false);
+        m_config.focus_mode.vscrollbar_shown = focus_mode["vscrollbar_shown"].value_or(false);
+        m_config.focus_mode.tabs_shown       = focus_mode["tabs_shown"].value_or(false);
+    }
+
     auto behavior = toml["behavior"];
 
     if (behavior)
@@ -1230,10 +1242,13 @@ MainWindow::ToggleFocusMode() noexcept
 
     if (m_focus_mode)
     {
-        m_panel->setVisible(false);
-        menuBar()->setVisible(false);
-        m_imgv->minimap()->setVisible(false);
-        m_tab_widget->tabBar()->setVisible(false);
+        // Hide UI elements for focus mode
+        m_panel->setVisible(m_config.focus_mode.statusbar_shown);
+        menuBar()->setVisible(m_config.focus_mode.menubar_shown);
+        m_imgv->minimap()->setVisible(m_config.focus_mode.minimap_shown);
+        m_tab_widget->tabBar()->setVisible(m_config.focus_mode.tabs_shown);
+        m_imgv->setHScrollBarVisible(m_config.focus_mode.hscrollbar_shown);
+        m_imgv->setVScrollBarVisible(m_config.focus_mode.vscrollbar_shown);
     }
     else
     {
@@ -1243,6 +1258,8 @@ MainWindow::ToggleFocusMode() noexcept
         m_imgv->minimap()->setVisible(m_config.ui.minimap_shown);
         updateTabBarVisibility();
         m_tab_widget->update();
+        m_imgv->setHScrollBarVisible(m_config.ui.hscrollbar_shown);
+        m_imgv->setVScrollBarVisible(m_config.ui.vscrollbar_shown);
     }
 }
 
