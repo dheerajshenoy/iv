@@ -4,6 +4,7 @@
 #include "toml.hpp"
 
 #include <QActionGroup>
+#include <QClipboard>
 #include <QDesktopServices>
 #include <QFileDialog>
 #include <QKeySequence>
@@ -15,8 +16,6 @@
 #include <QTabBar>
 #include <QTimer>
 #include <QWindow>
-#include <qnamespace.h>
-#include <qshortcut.h>
 
 void
 MainWindow::readArgs(argparse::ArgumentParser &parser) noexcept
@@ -114,10 +113,20 @@ MainWindow::initGui() noexcept
     m_open_containing_folder_action = m_file_menu->addAction(
         QString("Open Containing Folder\t%1").arg(m_config.shortcutMap["open_containing_folder"]), this,
         &MainWindow::OpenContainingFolder);
-    
+
     m_edit_menu = menuBar()->addMenu("&Edit");
-    
-    m_copy_
+
+    m_copy_menu = m_edit_menu->addMenu("Copy");
+
+    m_copy_path_action  = m_copy_menu->addAction(QString("File Path\t%1").arg(m_config.shortcutMap["copy_path"]), this,
+                                                 &MainWindow::CopyFilePathToClipboard);
+    m_copy_dir_action   = m_copy_menu->addAction(QString("File Directory\t%1").arg(m_config.shortcutMap["copy_dir"]),
+                                                 this, &MainWindow::CopyFileDirToClipboard);
+    m_copy_image_action = m_copy_menu->addAction(QString("Image\t%1").arg(m_config.shortcutMap["copy_image"]), this,
+                                                 &MainWindow::CopyImageToClipboard);
+
+    m_copy_viewport_action = m_copy_menu->addAction(QString("Viewport\t%1").arg(m_config.shortcutMap["copy_viewport"]),
+                                                    this, &MainWindow::CopyImageToClipboard);
 
     m_file_properties_action =
         m_file_menu->addAction(QString("File Properties\t%1").arg(m_config.shortcutMap["file_properties"]), this,
@@ -127,6 +136,11 @@ MainWindow::initGui() noexcept
                                                  this, &MainWindow::CloseFile);
     m_exit_action =
         m_file_menu->addAction(QString("Exit\t%1").arg(m_config.shortcutMap["exit"]), this, &MainWindow::close);
+
+    m_reset_view_action = m_view_menu->addAction(QString("Reset View\t%1").arg(m_config.shortcutMap["reset_view"]),
+                                                 this, &MainWindow::ResetView);
+
+    m_view_menu->addSeparator();
 
     m_zoom_menu = m_view_menu->addMenu("Zoom");
 
@@ -652,11 +666,13 @@ MainWindow::initConfig() noexcept
 
     if (behavior)
     {
-        m_config.behavior.auto_reload        = behavior["auto_reload"].value_or(false);
-        m_config.behavior.save_recent_files  = behavior["save_recent_files"].value_or(true);
-        m_config.behavior.recent_files_limit = behavior["recent_files_limit"].value_or(10);
-        m_config.behavior.auto_fit           = behavior["auto_fit"].value_or(false);
-        m_config.behavior.config_hot_reload  = behavior["config_hot_reload"].value_or(true);
+        m_config.behavior.auto_reload              = behavior["auto_reload"].value_or(false);
+        m_config.behavior.save_recent_files        = behavior["save_recent_files"].value_or(true);
+        m_config.behavior.recent_files_limit       = behavior["recent_files_limit"].value_or(10);
+        m_config.behavior.auto_fit                 = behavior["auto_fit"].value_or(false);
+        m_config.behavior.config_hot_reload        = behavior["config_hot_reload"].value_or(true);
+        m_config.behavior.keybind_conflict_warning = behavior["keybind_conflict_warning"].value_or(true);
+        m_config.behavior.copy_transformed_image   = behavior["copy_transformed_image"].value_or(false);
     }
 
     if (m_config.behavior.config_hot_reload)
@@ -729,6 +745,30 @@ MainWindow::initConfig() noexcept
 void
 MainWindow::initCommandMap() noexcept
 {
+    m_commandMap["reset_view"] = [this]()
+    {
+        ResetView();
+    };
+
+    m_commandMap["copy_path"] = [this]()
+    {
+        CopyFilePathToClipboard();
+    };
+
+    m_commandMap["copy_dir"] = [this]()
+    {
+        CopyFileDirToClipboard();
+    };
+
+    m_commandMap["copy_image"] = [this]()
+    {
+        CopyImageToClipboard();
+    };
+
+    m_commandMap["copy_viewport"] = [this]()
+    {
+        CopyViewportImageToClipboard();
+    };
 
     m_commandMap["reload_file"] = [this]()
     {
@@ -772,6 +812,16 @@ MainWindow::initCommandMap() noexcept
     m_commandMap["toggle_tabs"] = [this]()
     {
         ToggleTabBar();
+    };
+
+    m_commandMap["toggle_statusbar"] = [this]()
+    {
+        ToggleStatusbar();
+    };
+
+    m_commandMap["toggle_focus_mode"] = [this]()
+    {
+        ToggleFocusMode();
     };
 
     m_commandMap["toggle_fullscreen"] = [this]()
@@ -904,6 +954,22 @@ MainWindow::initCommandMap() noexcept
 void
 MainWindow::setupKeybinding(const QString &action, const QString &key) noexcept
 {
+    // Check for conflicts
+    if (m_config.behavior.keybind_conflict_warning)
+    {
+        for (auto it = m_config.shortcutMap.begin(); it != m_config.shortcutMap.end(); ++it)
+        {
+            if (it.key() != action && it.value() == key)
+            {
+                QMessageBox::warning(this, "Keybinding Conflict",
+                                     QString("The key '%1' is already assigned to action '%2'.\n"
+                                             "Please resolve the conflict in the config file.")
+                                         .arg(key, it.key()));
+                return;
+            }
+        }
+    }
+
     // Remove existing shortcut for this action, if any
     if (m_shortcut_map.contains(action))
     {
@@ -1100,8 +1166,9 @@ MainWindow::applyConfigChanges() noexcept
     m_auto_fit_action->setChecked(m_config.behavior.auto_fit);
     m_toggle_auto_reload_action->setChecked(m_config.behavior.auto_reload);
     m_tab_widget->setTabPosition(tabBarPositionFromString(m_config.ui.tab_bar_position));
-    m_tab_widget->tabBar()->setVisible(m_config.ui.tabs_shown);
     m_tab_widget->setTabBarAutoHide(m_config.ui.tabs_autohide);
+    updateTabBarVisibility();
+
     menuBar()->setVisible(m_config.ui.menubar_shown);
     m_panel->setVisible(m_config.ui.statusbar_shown);
 
@@ -1152,4 +1219,98 @@ MainWindow::ToggleVScrollBar() noexcept
 {
     if (m_imgv)
         m_imgv->toggleVScrollbar();
+}
+
+void
+MainWindow::ToggleFocusMode() noexcept
+{
+    if (!m_imgv)
+        return;
+
+    m_focus_mode = !m_focus_mode;
+
+    if (m_focus_mode)
+    {
+        m_panel->setVisible(false);
+        menuBar()->setVisible(false);
+        m_imgv->minimap()->setVisible(false);
+        m_tab_widget->tabBar()->setVisible(false);
+    }
+    else
+    {
+        // Restore previous visibility states
+        m_panel->setVisible(m_config.ui.statusbar_shown);
+        menuBar()->setVisible(m_config.ui.menubar_shown);
+        m_imgv->minimap()->setVisible(m_config.ui.minimap_shown);
+        updateTabBarVisibility();
+        m_tab_widget->update();
+    }
+}
+
+void
+MainWindow::updateTabBarVisibility() noexcept
+{
+    // Let tab widget manage visibility itself based on auto-hide property
+    m_tab_widget->tabBar()->setVisible(true); // initially show
+    if (m_tab_widget->tabBarAutoHide() && m_tab_widget->count() < 2)
+        m_tab_widget->tabBar()->setVisible(false);
+}
+
+void
+MainWindow::ResetView() noexcept
+{
+    if (m_imgv)
+        m_imgv->resetView();
+}
+
+void
+MainWindow::CopyFilePathToClipboard() noexcept
+{
+    if (!m_imgv)
+        return;
+
+    const QString &filepath = m_imgv->filePath();
+    QClipboard *clipboard   = QGuiApplication::clipboard();
+    clipboard->setText(filepath);
+}
+
+void
+MainWindow::CopyFileDirToClipboard() noexcept
+{
+    if (!m_imgv)
+        return;
+
+    const QString &filedir = m_imgv->fileDir();
+    QClipboard *clipboard  = QGuiApplication::clipboard();
+    clipboard->setText(filedir);
+}
+
+void
+MainWindow::CopyImageToClipboard() noexcept
+{
+    if (!m_imgv)
+        return;
+
+    QImage img;
+    if (m_config.behavior.copy_transformed_image)
+    {
+        img = m_imgv->transformedImage();
+    }
+    else
+    {
+        img = m_imgv->image();
+    }
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    clipboard->setImage(img);
+}
+
+void
+MainWindow::CopyViewportImageToClipboard() noexcept
+{
+    if (!m_imgv)
+        return;
+
+    QImage img            = m_imgv->viewportImage();
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    clipboard->setImage(img);
 }

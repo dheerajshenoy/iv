@@ -44,6 +44,7 @@ public:
     void zoomIn() noexcept;
     void zoomOut() noexcept;
     void zoomReset() noexcept;
+    void flipReset() noexcept;
     void rotateClock() noexcept;
     void rotateAnticlock() noexcept;
     void fitWindow() noexcept;
@@ -139,6 +140,21 @@ public:
         return m_fit_mode;
     }
 
+    inline Minimap *minimap() noexcept
+    {
+        return m_minimap;
+    }
+
+    inline const QImage image() const noexcept
+    {
+        return m_pix_item->pixmap().toImage();
+    }
+
+    QImage transformedImage() const noexcept;
+    QImage viewportImage() const noexcept;
+
+    void resetView() noexcept;
+
 #ifdef HAS_LIBEXIV2
     QMap<QString, QString> getEXIF() noexcept;
 #endif
@@ -163,6 +179,7 @@ private:
     void initConnections() noexcept;
     void loadImage(const QImage &img) noexcept;
     bool render() noexcept;
+    void setRotation(int angle) noexcept;
 
 #ifdef HAS_LIBAVIF
     bool renderAvif() noexcept;

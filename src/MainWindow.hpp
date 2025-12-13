@@ -67,12 +67,19 @@ public:
     void ToggleTabBar() noexcept;
     void ToggleHScrollBar() noexcept;
     void ToggleVScrollBar() noexcept;
+    void ToggleFocusMode() noexcept;
+    void ResetView() noexcept;
+    void CopyImageToClipboard() noexcept;
+    void CopyFilePathToClipboard() noexcept;
+    void CopyFileDirToClipboard() noexcept;
+    void CopyViewportImageToClipboard() noexcept;
 
     QTabWidget::TabPosition tabBarPositionFromString(const QString &position) const noexcept;
 
     inline void ToggleStatusbar() const noexcept
     {
         m_panel->setVisible(!m_panel->isVisible());
+        qDebug() << "DD";
     }
 
 protected:
@@ -93,6 +100,7 @@ private:
     void handleCurrentTabChanged(int index) noexcept;
     void onConfigFileChanged(const QString &filePath) noexcept;
     void applyConfigChanges() noexcept;
+    void updateTabBarVisibility() noexcept;
     bool m_default_keybindings{true}, m_not_tabbed{false};
 
     QMenu *m_file_menu{nullptr};
@@ -105,7 +113,13 @@ private:
     QMenu *m_fit_menu{nullptr};
     QMenu *m_flip_menu{nullptr};
     QMenu *m_toggle_menu{nullptr};
+    QMenu *m_edit_menu{nullptr};
+    QMenu *m_copy_menu{nullptr};
 
+    QAction *m_copy_viewport_action{nullptr};
+    QAction *m_copy_dir_action{nullptr};
+    QAction *m_copy_path_action{nullptr};
+    QAction *m_copy_image_action{nullptr};
     QAction *m_open_file_action{nullptr};
     QAction *m_close_file_action{nullptr};
     QAction *m_exit_action{nullptr};
@@ -129,6 +143,7 @@ private:
     QAction *m_file_properties_action{nullptr};
     QAction *m_flip_horizontal_action{nullptr};
     QAction *m_flip_vertical_action{nullptr};
+    QAction *m_reset_view_action{nullptr};
 
     TabWidget *m_tab_widget{new TabWidget()};
     Panel *m_panel{new Panel()};
@@ -141,4 +156,5 @@ private:
     QMap<QString, QShortcut *> m_shortcut_map;
     QFileSystemWatcher *m_config_file_watcher{nullptr};
     QString m_config_file_path;
+    bool m_focus_mode{false};
 };

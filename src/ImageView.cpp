@@ -12,6 +12,7 @@
 #include <QThreadPool>
 #include <QtConcurrent/QtConcurrent>
 #include <QtConcurrent/qtconcurrentreducekernel.h>
+#include <qbytearrayview.h>
 #include <qimagereader.h>
 #include <qnamespace.h>
 
@@ -113,9 +114,9 @@ ImageView::openFile(const QString &filepath) noexcept
         stopGifAnimation();
 
         // Load static image asynchronously without blocking
-        auto future = QtConcurrent::run([this, filepath]() { return render(); });
+        QFuture<bool> future = QtConcurrent::run([this, filepath]() { return render(); });
 
-        auto *watcher = new QFutureWatcher<bool>(this);
+        QFutureWatcher<bool> *watcher = new QFutureWatcher<bool>(this);
         connect(watcher, &QFutureWatcher<bool>::finished, this, [this, watcher]()
         {
             m_success = watcher->result();
@@ -337,18 +338,31 @@ ImageView::zoomReset() noexcept
     updateMinimapRegion();
 }
 
+// Reset flip
 void
-ImageView::rotateClock() noexcept
+ImageView::flipReset() noexcept
 {
+    QTransform t;
+    m_pix_item->setTransform(t);
+    m_minimap->setTransform(t);
+}
+
+void
+ImageView::setRotation(int angle) noexcept
+{
+
     // Save current viewport center in scene coordinates
     QPointF viewCenter = m_gview->mapToScene(m_gview->viewport()->rect().center());
 
     // Update rotation state
-    m_rotation = (m_rotation + 90) % 360;
+    m_rotation = angle % 360;
+
+    QTransform t;
+    t.rotate(m_rotation);
 
     // Rotate the pixmap item around its center
     m_pix_item->setTransformOriginPoint(m_pix_item->sceneBoundingRect().center());
-    m_pix_item->setRotation(m_rotation);
+    m_pix_item->setTransform(t);
     m_gview->setSceneRect(m_pix_item->sceneBoundingRect());
 
     m_gview->centerOn(viewCenter);
@@ -357,22 +371,15 @@ ImageView::rotateClock() noexcept
 }
 
 void
+ImageView::rotateClock() noexcept
+{
+    setRotation(m_rotation + 90);
+}
+
+void
 ImageView::rotateAnticlock() noexcept
 {
-    // Save current viewport center in scene coordinates
-    QPointF viewCenter = m_gview->mapToScene(m_gview->viewport()->rect().center());
-
-    // Update rotation state
-    m_rotation = (m_rotation + 270) % 360;
-
-    // Rotate the pixmap item around its center
-    m_pix_item->setTransformOriginPoint(m_pix_item->sceneBoundingRect().center());
-    m_pix_item->setRotation(m_rotation);
-    m_gview->setSceneRect(m_pix_item->sceneBoundingRect());
-
-    m_gview->centerOn(viewCenter);
-    m_minimap->setRotation(m_rotation);
-    updateMinimapRegion();
+    setRotation(m_rotation - 90);
 }
 
 void
@@ -381,13 +388,13 @@ ImageView::fitHeight() noexcept
     m_fit_mode = FitMode::HEIGHT;
     QTransform t;
     t.rotate(m_rotation);
-    auto pixHeight  = t.mapRect(m_pix_item->boundingRect()).height();
-    auto viewHeight = m_gview->viewport()->rect().height();
+    qreal pixHeight  = t.mapRect(m_pix_item->boundingRect()).height();
+    qreal viewHeight = m_gview->viewport()->rect().height();
 
     float scaleFactor = viewHeight / pixHeight;
 
     t.scale(scaleFactor, scaleFactor);
-    m_gview->setTransform(t);
+    m_pix_item->setTransform(t);
     // m_gview->centerOn(m_pix_item);
 }
 
@@ -395,16 +402,16 @@ void
 ImageView::fitWidth() noexcept
 {
     m_fit_mode = FitMode::WIDTH;
+
     QTransform t;
     t.rotate(m_rotation);
-
-    auto pixwidth  = t.mapRect(m_pix_item->boundingRect()).width();
-    auto viewwidth = m_gview->viewport()->rect().width();
+    const auto pixwidth  = t.mapRect(m_pix_item->boundingRect()).width();
+    const auto viewwidth = m_gview->viewport()->rect().width();
 
     float scaleFactor = viewwidth / pixwidth;
 
     t.scale(scaleFactor, scaleFactor);
-    m_gview->setTransform(t);
+    m_pix_item->setTransform(t);
     // m_gview->centerOn(m_pix_item);
 }
 
@@ -444,9 +451,9 @@ void
 ImageView::flipLeftRight() noexcept
 {
     QPixmap pix  = m_pix_item->pixmap();
-    QTransform t = m_gview->transform();
+    QTransform t = m_pix_item->transform();
     t.scale(-1, 1);
-    m_gview->setTransform(t);
+    m_pix_item->setTransform(t);
     m_minimap->setTransform(t);
 }
 
@@ -454,9 +461,9 @@ void
 ImageView::flipUpDown() noexcept
 {
     QPixmap pix  = m_pix_item->pixmap();
-    QTransform t = m_gview->transform();
+    QTransform t = m_pix_item->transform();
     t.scale(1, -1);
-    m_gview->setTransform(t);
+    m_pix_item->setTransform(t);
     m_minimap->setTransform(t);
 }
 
@@ -582,9 +589,9 @@ ImageView::updateMinimapPosition() noexcept
 
     const int padding = m_minimap->padding();
 
-    const auto viewport = m_gview->viewport()->rect();
-    const int gw        = viewport.width();
-    const int gh        = viewport.height();
+    const QRect viewport = m_gview->viewport()->rect();
+    const int gw         = viewport.width();
+    const int gh         = viewport.height();
 
     int x = 0;
     int y = 0;
@@ -1171,4 +1178,38 @@ ImageView::startGifAnimation() noexcept
             m_movie->start();
         }
     }
+}
+
+void
+ImageView::resetView() noexcept
+{
+    setRotation(0);
+    flipReset();
+    zoomReset();
+}
+
+QImage
+ImageView::transformedImage() const noexcept
+{
+    if (!m_pix_item || m_pix_item->pixmap().isNull())
+        return {};
+
+    return m_pix_item->pixmap().transformed(m_pix_item->transform()).toImage();
+}
+
+QImage
+ImageView::viewportImage() const noexcept
+{
+    if (!m_pix_item || m_pix_item->pixmap().isNull())
+        return {};
+
+    QRect viewportRect = m_gview->viewport()->rect();
+    QImage viewportImage(viewportRect.size(), QImage::Format_ARGB32);
+    viewportImage.fill(Qt::transparent);
+
+    QPainter painter(&viewportImage);
+    m_gview->render(&painter, QRectF(), viewportRect);
+    painter.end();
+
+    return viewportImage;
 }
