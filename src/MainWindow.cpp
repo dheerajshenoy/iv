@@ -366,9 +366,6 @@ MainWindow::OpenFile(const QString &filepath) noexcept
 
     m_imgv = new ImageView(m_config, m_tab_widget);
 
-    connect(m_imgv->gview(), &GraphicsView::zoomInRequested, this, &MainWindow::ZoomIn);
-    connect(m_imgv->gview(), &GraphicsView::zoomOutRequested, this, &MainWindow::ZoomOut);
-
     bool success = m_imgv->openFile(filepath);
     if (!success)
     {
