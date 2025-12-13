@@ -12,6 +12,7 @@
 #include <QThreadPool>
 #include <QtConcurrent/QtConcurrent>
 #include <QtConcurrent/qtconcurrentreducekernel.h>
+#include <qimagereader.h>
 #include <qnamespace.h>
 
 #ifdef HAS_LIBAVIF
