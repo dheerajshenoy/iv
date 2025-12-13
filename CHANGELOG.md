@@ -26,3 +26,4 @@
 - Fix minimap padding bug
 - Minimap border
 - Optimize gif loading (using QMovie (large) or preDecoded (small) frames based on size)
+- Fix GIF pause/resume when changing tabs
