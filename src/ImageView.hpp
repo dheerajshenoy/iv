@@ -220,7 +220,7 @@ private:
     QImage magickImageToQImage(Magick::Image &image) noexcept;
     GraphicsView *m_gview;
     QGraphicsScene *m_gscene;
-    QGraphicsPixmapItem *m_pix_item{new QGraphicsPixmapItem()};
+    QGraphicsPixmapItem *m_pix_item{nullptr};
     QString m_filepath, m_filesize;
     float m_zoomFactor{1.25};
     int m_rotation{0};

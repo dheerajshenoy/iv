@@ -31,6 +31,10 @@ ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m
     QVBoxLayout *layout = new QVBoxLayout();
     m_gview             = new GraphicsView();
     m_gscene            = new QGraphicsScene();
+    m_pix_item          = new QGraphicsPixmapItem();
+
+    m_pix_item->setTransformationMode(Qt::SmoothTransformation);
+
     layout->addWidget(m_gview);
     m_gview->setScene(m_gscene);
     m_gscene->addItem(m_pix_item);
