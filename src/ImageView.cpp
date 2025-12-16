@@ -404,7 +404,7 @@ ImageView::fitHeight() noexcept
     float scaleFactor = viewHeight / pixHeight;
 
     t.scale(scaleFactor, scaleFactor);
-    m_pix_item->setTransform(t);
+    m_gview->setTransform(t);
 }
 
 void
@@ -420,7 +420,7 @@ ImageView::fitWidth() noexcept
     float scaleFactor = viewwidth / pixwidth;
 
     t.scale(scaleFactor, scaleFactor);
-    m_pix_item->setTransform(t);
+    m_gview->setTransform(t);
 }
 
 void
