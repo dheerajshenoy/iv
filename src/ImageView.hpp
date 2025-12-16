@@ -236,9 +236,9 @@ private:
     // For pre-decoded playback (small GIFs)
     QVector<QPixmap> m_gifFrames;
     QVector<int> m_gifDelays;
-    QTimer *m_gifTimer   = nullptr;
-    int m_currentFrame   = 0;
-    bool m_usePreDecoded = false;
+    QTimer *m_gifTimer{nullptr};
+    int m_currentFrame{0};
+    bool m_usePreDecoded{false};
 
     PropertiesWidget *m_prop_widget{nullptr};
 };

@@ -509,11 +509,13 @@ ImageView::renderAnimatedImage() noexcept
     if (fileSize > threshold)
     {
         // Use QMovie for large files
+        m_usePreDecoded = false;
         renderWithQMovie();
     }
     else
     {
         // Pre-decode for small files
+        m_usePreDecoded = true;
         renderWithPreDecode();
     }
 }
