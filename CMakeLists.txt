@@ -29,6 +29,8 @@ find_package(ImageMagick COMPONENTS Magick++)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(MAGICKPP REQUIRED Magick++)
+pkg_check_modules(libavif QUIET libavif)
+pkg_check_modules(libexiv2 QUIET exiv2)
 
 add_executable(${PROJECT_NAME}
     src/main.cpp
@@ -58,10 +60,8 @@ target_link_libraries(${PROJECT_NAME}
     ${MAGICKPP_LIBRARIES}
 )
 
-find_library(libavif avif)
-find_library(libexiv2 exiv2)
 
-if(libavif)
+if(libavif_FOUND)
     message(STATUS "*libavif* found. Compiling with AVIF image file support")
     target_link_libraries(${PROJECT_NAME} avif)
     target_compile_definitions(${PROJECT_NAME} PUBLIC HAS_LIBAVIF=1)
@@ -69,7 +69,7 @@ else()
     message(STATUS "libavif not found; AVIF support will be disabled")
 endif()
 
-if(libexiv2)
+if(libexiv2_FOUND)
     message(STATUS "*libexiv2* found. Compiling with EXIF metadata support")
     target_link_libraries(${PROJECT_NAME} exiv2)
     target_compile_definitions(${PROJECT_NAME} PUBLIC HAS_LIBEXIV2=1)
