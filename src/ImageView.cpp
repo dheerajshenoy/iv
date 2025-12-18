@@ -15,16 +15,17 @@
 #include <qbytearrayview.h>
 #include <qimagereader.h>
 #include <qnamespace.h>
+#include <fstream>
 
 #ifdef HAS_LIBAVIF
 #include <avif/avif.h>
 #endif
 
-#include <fstream>
 
-// #ifdef HAS_LIBEXIV2
+#ifdef HAS_LIBEXIV2
 #include <exiv2/exiv2.hpp>
-// #endif
+#endif
+
 
 ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m_config(config)
 {
